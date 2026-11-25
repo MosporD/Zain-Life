@@ -1,0 +1,14 @@
+{
+  "appId": "com.personal.lifeplanner",
+  "appName": "Zain Life",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#000000"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_swirl",
+      "iconColor": "#FFFFFF"
+    }
+  }
+}

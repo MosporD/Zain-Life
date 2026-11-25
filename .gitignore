@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+*.apk
+*.aab
+.tmp/
+gradle-dist/
+
+# Machine-specific / sensitive
+certs/
+*.p12
+*.jks
+*.keystore
+android/local.properties
+.env
+
+# Android build folders
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+# Copied in by `npx cap sync`; the source of truth is www/
+android/app/src/main/assets/public/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

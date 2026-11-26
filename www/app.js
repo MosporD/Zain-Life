@@ -192,7 +192,7 @@
     var light = state.settings.theme === 'light';
     document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
     var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', light ? '#f4f4f4' : '#000000');
+    if (m) m.setAttribute('content', light ? '#f3f1ff' : '#0a0822');
   }
 
   var TABS = {
@@ -1368,7 +1368,10 @@
       '<button class="chip' + (st.lang === 'ar' ? ' on' : '') + '" data-act="lang" data-v="ar">العربية</button></span></div>' +
       '<div class="setrow"><span class="st">Theme</span><span class="chips">' +
       '<button class="chip' + (st.theme !== 'light' ? ' on' : '') + '" data-act="theme" data-v="dark">Dark</button>' +
-      '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div></div></section>' +
+      '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div>' +
+      '<div class="setrow"><span class="st">Background</span><span class="chips">' +
+      '<button class="chip' + (st.motion !== false ? ' on' : '') + '" data-act="motion" data-v="on">Animated</button>' +
+      '<button class="chip' + (st.motion === false ? ' on' : '') + '" data-act="motion" data-v="off">Static</button></span></div></div></section>' +
       '<section><h2>Reminders</h2><div class="card">' +
       '<label class="setrow"><span><span class="st">Block reminders</span><br><span class="sd">' + (native ? '5 minutes before each task, and when it starts' : 'Works in the installed app') + '</span></span>' +
       '<span class="switch"><input type="checkbox" id="set-reminders"' + (st.reminders ? ' checked' : '') + (native ? '' : ' disabled') + '><span></span></span></label>' +

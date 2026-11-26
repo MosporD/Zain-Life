@@ -435,5 +435,6 @@ window.AR_DICT = {
   'Less than a minute, not logged': 'أقل من دقيقة، لم يُسجّل', 'Tap again to discard': 'اضغط مجددًا للتجاهل', 'What did you work on? (optional)': 'على ماذا عملت؟ (اختياري)',
   'Time added': 'تمت إضافة الوقت', 'Timer started': 'بدأ المؤقت', 'Meeting now': 'اجتماع الآن',
   'Next meeting': 'الاجتماع التالي', 'Work logged': 'عمل مسجّل', 'Tasks done': 'مهام منجزة',
-  'Due date': 'تاريخ الاستحقاق'
+  'Due date': 'تاريخ الاستحقاق',
+  'Background': 'الخلفية', 'Animated': 'متحركة', 'Static': 'ثابتة'
 };

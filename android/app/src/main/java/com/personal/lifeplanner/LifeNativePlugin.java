@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -22,12 +23,14 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 
-/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect, calendar). */
+/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect, calendar, step challenge). */
 @CapacitorPlugin(
     name = "LifeNative",
     permissions = {
         @Permission(alias = "health", strings = { HealthBridge.READ_STEPS, HealthBridge.READ_SLEEP }),
-        @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR })
+        @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR }),
+        @Permission(alias = "location", strings = { Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION }),
+        @Permission(alias = "activity", strings = { Manifest.permission.ACTIVITY_RECOGNITION })
     }
 )
 public class LifeNativePlugin extends Plugin {
@@ -139,4 +142,77 @@ public class LifeNativePlugin extends Plugin {
             call.resolve(res);
         }).start();
     }
+    /* ---------------- step challenge (ChallengeService) ---------------- */
+
+    private boolean has(String perm) { return getContext().checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED; }
+    private boolean activityOk() { return Build.VERSION.SDK_INT < 29 || has(Manifest.permission.ACTIVITY_RECOGNITION); }
+    private boolean locationOk() { return has(Manifest.permission.ACCESS_FINE_LOCATION) || has(Manifest.permission.ACCESS_COARSE_LOCATION); }
+
+    private JSObject challengeState() {
+        Context c = getContext();
+        SharedPreferences p = ChallengeService.prefs(c);
+        JSObject r = new JSObject();
+        r.put("on", p.getBoolean("on", false));
+        r.put("name", p.getString("name", ""));
+        r.put("start", p.getLong("start", 0));
+        r.put("end", p.getLong("end", 0));
+        r.put("inWindow", ChallengeService.inWindow(c));
+        r.put("running", ChallengeService.running);
+        r.put("location", locationOk());
+        r.put("precise", has(Manifest.permission.ACCESS_FINE_LOCATION));
+        r.put("activity", activityOk());
+        r.put("gps", p.getString("gps", "idle"));
+        r.put("error", p.getString("error", ""));
+        try { r.put("days", new JSObject(p.getString("days", "{}"))); } catch (Exception e) { r.put("days", new JSObject()); }
+        try { r.put("log", new JSArray(p.getString("log", "[]"))); } catch (Exception e) { r.put("log", new JSArray()); }
+        return r;
+    }
+
+    /** Starts the check if the challenge is on, today is inside its dates and permissions are given. */
+    private void challengeSync() {
+        Context c = getContext();
+        if (ChallengeService.inWindow(c) && locationOk() && activityOk()) {
+            if (!ChallengeService.running) {
+                try { ChallengeService.start(c); } catch (Exception e) { ChallengeService.prefs(c).edit().putString("error", "Android did not allow the check to start. Open the app again.").apply(); }
+            }
+        } else if (ChallengeService.running) ChallengeService.stop(c);
+    }
+
+    @PluginMethod
+    public void challengeStatus(PluginCall call) { call.resolve(challengeState()); }
+
+    /** Asks for location, then physical activity (the step counter), then reports the state. */
+    @PluginMethod
+    public void challengePermissions(PluginCall call) {
+        if (!locationOk()) { requestPermissionForAlias("location", call, "challengeLocCallback"); return; }
+        challengeLocCallback(call);
+    }
+
+    @PermissionCallback
+    private void challengeLocCallback(PluginCall call) {
+        if (locationOk() && !activityOk()) { requestPermissionForAlias("activity", call, "challengeActCallback"); return; }
+        challengeActCallback(call);
+    }
+
+    @PermissionCallback
+    private void challengeActCallback(PluginCall call) { challengeSync(); call.resolve(challengeState()); }
+
+    /** {name, start, end (ms), on}: saves the challenge and starts or stops the check. */
+    @PluginMethod
+    public void challengeSet(PluginCall call) {
+        SharedPreferences p = ChallengeService.prefs(getContext());
+        SharedPreferences.Editor e = p.edit();
+        if (call.hasOption("name")) e.putString("name", call.getString("name", ""));
+        if (call.hasOption("start")) e.putLong("start", call.getLong("start", 0L));
+        if (call.hasOption("end")) e.putLong("end", call.getLong("end", 0L));
+        if (call.hasOption("on")) e.putBoolean("on", Boolean.TRUE.equals(call.getBoolean("on", false)));
+        if (Boolean.TRUE.equals(call.getBoolean("clear", false))) e.remove("days").remove("log");
+        e.commit();
+        challengeSync();
+        call.resolve(challengeState());
+    }
+
+    /** Called when the app opens: restarts the check after a phone restart or if Android stopped it. */
+    @PluginMethod
+    public void challengeEnsure(PluginCall call) { challengeSync(); call.resolve(challengeState()); }
 }

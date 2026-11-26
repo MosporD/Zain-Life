@@ -555,3 +555,41 @@ h2 { font-size: 1.06rem; }
   .sp-swirl .sp-outline { animation: none; stroke-dashoffset: 0; fill-opacity: 1; }
 }
 .ob-hero .sw { fill: var(--accent); }
+
+/* ---------- Work tab ---------- */
+.btn.sm { padding: 7px 12px; font-size: .8rem; border-radius: 10px; }
+.job-hrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.job-hrow .lbl { display: block; margin-bottom: 4px; }
+.job-hours { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.job-logged { text-align: end; }
+.job-logged b { display: block; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.loglist li.live .ln b { color: var(--accent); }
+.loglist li.past { opacity: .55; }
+.job-now { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.job-add { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.job-add #job-task-in { grid-column: 1 / -1; }
+.job-add .btn { grid-column: 1 / -1; }
+.job-add select, .job-add input { min-width: 0; }
+.job-tasks { list-style: none; margin: 0 0 6px; padding: 0; }
+.job-tasks li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.job-tasks li:last-child { border-bottom: 0; }
+.job-tasks .ln { flex: 1; min-width: 0; }
+.job-tasks .ln b { display: block; font-size: .92rem; font-weight: 600; overflow-wrap: anywhere; }
+.job-tasks .ln span { font-size: .76rem; color: var(--muted); }
+.job-tasks .ln span.job-due { color: var(--accent); font-weight: 700; }
+.job-tasks .ln span.job-late { color: var(--warn); font-weight: 700; }
+.job-tick { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--muted); background: none; padding: 0; }
+.job-tick.on { background: var(--accent); border-color: var(--accent); }
+.job-tick.on + .ln b { text-decoration: line-through; color: var(--muted); }
+.card > .flabel { margin-top: 16px; }
+.job-run { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.job-run .lbl { display: block; margin-bottom: 4px; }
+.job-run b { display: block; }
+.job-elapsed { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.job-bars { list-style: none; margin: 10px 0 0; padding: 0; }
+.job-bars li { display: grid; grid-template-columns: minmax(0, 7.5rem) 1fr auto; align-items: center; gap: 10px; padding: 6px 0; }
+.job-bn { font-size: .86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.job-bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.job-bar span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.job-next { margin-bottom: 12px; }
+.job-next b { display: block; margin: 4px 0 2px; }

@@ -416,5 +416,24 @@ window.AR_DICT = {
   'Manaqeesh, za’atar': 'مناقيش زعتر', 'Manaqeesh, cheese': 'مناقيش جبنة', 'Ka’ak with sesame': 'كعك بالسمسم', 'Tabbouleh': 'تبولة', 'Fattoush': 'فتوش', 'Lentil soup (shorbat adas)': 'شوربة عدس',
   'Freekeh soup': 'شوربة فريكة', 'Mujaddara': 'مجدرة', 'Warak enab (stuffed vine leaves)': 'ورق عنب', 'Mulukhiyah with chicken': 'ملوخية بالدجاج', 'Kofta, grilled': 'كفتة مشوية', 'Shish tawouk': 'شيش طاووق',
   'Kubbeh, fried': 'كبة مقلية', 'Sambousek, cheese': 'سمبوسك جبنة', 'Knafeh nabulsieh': 'كنافة نابلسية', 'Qatayef with walnuts, fried': 'قطايف بالجوز مقلية', 'Baklava': 'بقلاوة', 'Tea with 2 tsp sugar': 'شاي بملعقتي سكر',
-  'Qamar al-din juice': 'عصير قمر الدين', 'Jallab': 'جلاب'
+  'Qamar al-din juice': 'عصير قمر الدين', 'Jallab': 'جلاب',
+  // ---------- work tab ----------
+  'Work today': 'العمل اليوم', 'No work planned today': 'لا عمل مخطط اليوم', 'logged': 'مسجّل',
+  'Focus now': 'ركّز الآن', 'Meetings': 'الاجتماعات', 'Meetings from your phone’s calendar (including Outlook, when it syncs to the phone) show here in the installed app.': 'تظهر هنا في التطبيق المثبّت اجتماعات تقويم هاتفك (ومنها Outlook عندما يتزامن مع الهاتف).',
+  'Loading your calendar…': 'جارٍ تحميل تقويمك…', 'See today’s meetings from your phone’s calendar here. Zain Life only reads them: nothing is changed or sent anywhere.': 'اعرض اجتماعات اليوم من تقويم هاتفك هنا. زين لايف يقرأها فقط: لا يغيّر شيئًا ولا يرسل شيئًا إلى أي مكان.', 'Show my meetings': 'اعرض اجتماعاتي',
+  'Could not read the calendar.': 'تعذّرت قراءة التقويم.', 'No meetings today.': 'لا اجتماعات اليوم.', 'Refresh': 'تحديث',
+  'Calendar access is off. You can allow it in Android settings.': 'الوصول إلى التقويم مغلق. يمكنك السماح به من إعدادات أندرويد.', 'Could not open the calendar permission': 'تعذّر فتح إذن التقويم', 'Meetings updated': 'تم تحديث الاجتماعات',
+  'All day': 'طوال اليوم', '(No title)': '(بلا عنوان)', 'Tasks': 'المهام',
+  'Projects': 'المشاريع', 'Add a task': 'أضف مهمة', 'General': 'عام',
+  'No open tasks. Add what you need to get done.': 'لا مهام مفتوحة. أضف ما تحتاج إلى إنجازه.', 'Hide done today': 'إخفاء ما أُنجز اليوم', 'Show done today': 'عرض ما أُنجز اليوم',
+  'Due today': 'مستحقة اليوم', 'Due': 'مستحقة', 'Mark not done': 'إلغاء الإنجاز',
+  'Type the task first': 'اكتب المهمة أولًا', 'Group tasks and logged time by project.': 'جمّع المهام والوقت المسجّل حسب المشروع.', 'New project': 'مشروع جديد',
+  'That project already exists': 'هذا المشروع موجود بالفعل', 'Tap again: its tasks move to General': 'اضغط مجددًا: تنتقل مهامه إلى عام', 'Time log': 'سجل الوقت',
+  'Timer running': 'المؤقت يعمل', 'since': 'منذ', 'Stop and log': 'إيقاف وتسجيل',
+  'Discard': 'تجاهل', 'Start timer': 'ابدأ المؤقت', 'Add time': 'أضف وقتًا',
+  'Project': 'المشروع', 'What are you working on? (optional)': 'على ماذا تعمل؟ (اختياري)', 'e.g. Weekly KPI report': 'مثلًا: تقرير مؤشرات الأداء الأسبوعي',
+  'Less than a minute, not logged': 'أقل من دقيقة، لم يُسجّل', 'Tap again to discard': 'اضغط مجددًا للتجاهل', 'What did you work on? (optional)': 'على ماذا عملت؟ (اختياري)',
+  'Time added': 'تمت إضافة الوقت', 'Timer started': 'بدأ المؤقت', 'Meeting now': 'اجتماع الآن',
+  'Next meeting': 'الاجتماع التالي', 'Work logged': 'عمل مسجّل', 'Tasks done': 'مهام منجزة',
+  'Due date': 'تاريخ الاستحقاق'
 };

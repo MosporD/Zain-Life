@@ -113,7 +113,7 @@
   }
   var state = load();
   // Extension points used by life.js (workouts, Ramadan, savings, widget...).
-  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [] };
+  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [] };
   function runHooks(name) { var a = [].slice.call(arguments, 1), out = ''; HOOKS[name].forEach(function (f) { try { var r = f.apply(null, a); if (typeof r === 'string') out += r; } catch (e) { console.warn(name, e); } }); return out; }
   var saveFailed = false;
   function save() {
@@ -192,7 +192,7 @@
     var light = state.settings.theme === 'light';
     document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
     var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', light ? '#f3f1ff' : '#0a0822');
+    if (m) m.setAttribute('content', light ? '#e3edf9' : '#2b2444');
   }
 
   var TABS = {
@@ -620,6 +620,7 @@
     var d = $('drawer'), bg = $('drawer-bg'), b = document.querySelector('.menu-btn');
     if (!d) return;
     d.classList.toggle('open', drawerOpen);
+    document.body.classList.toggle('drawer-open', drawerOpen);
     d.setAttribute('aria-hidden', drawerOpen ? 'false' : 'true');
     bg.hidden = !drawerOpen;
     if (b) b.setAttribute('aria-expanded', drawerOpen ? 'true' : 'false');
@@ -1377,9 +1378,7 @@
       '<div class="setrow"><span class="st">Theme</span><span class="chips">' +
       '<button class="chip' + (st.theme !== 'light' ? ' on' : '') + '" data-act="theme" data-v="dark">Dark</button>' +
       '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div>' +
-      '<div class="setrow"><span class="st">Background</span><span class="chips">' +
-      '<button class="chip' + (st.motion !== false ? ' on' : '') + '" data-act="motion" data-v="on">Animated</button>' +
-      '<button class="chip' + (st.motion === false ? ' on' : '') + '" data-act="motion" data-v="off">Static</button></span></div></div></section>' +
+      '</div></section>' +
       '<section><h2>Reminders</h2><div class="card">' +
       '<label class="setrow"><span><span class="st">Block reminders</span><br><span class="sd">' + (native ? '5 minutes before each task, and when it starts' : 'Works in the installed app') + '</span></span>' +
       '<span class="switch"><input type="checkbox" id="set-reminders"' + (st.reminders ? ' checked' : '') + (native ? '' : ' disabled') + '><span></span></span></label>' +

@@ -3,7 +3,7 @@
   "appName": "Zain Life",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#0a0822"
+    "backgroundColor": "#2b2444"
   },
   "plugins": {
     "LocalNotifications": {

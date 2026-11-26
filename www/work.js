@@ -147,6 +147,7 @@
     if (!x) return;
     x.done = !x.done; x.doneAt = x.done ? todayKey() : null;
     L.save(); L.render(); if (x.done) toast('Done: ' + x.title);
+    if (L.sheetOpen() && document.querySelector('#sheet-root .qk-top')) A['qk-open']();   // refresh the centre-button sheet
   };
   A['job-task-del'] = function (el) {
     if (!L.armed(el, 'Tap again to remove')) return;
@@ -356,6 +357,24 @@
     var live = next.begin <= now;
     return '<button class="card dcard job-next" data-act="job-go"><span class="lbl">' + (live ? 'Meeting now' : 'Next meeting') + '</span>' + (next.title ? '<b class="notr">' + esc(next.title) + '</b>' : '<b>(No title)</b>') +
       '<span class="muted small">' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</span></button>';
+  });
+  // Centre button: next meeting and the tasks to do first (overdue, due today, then the rest).
+  H.quick.push(function () {
+    var k = todayKey(), now = Date.now(), out = '';
+    if (cal.granted && cal.events) {
+      var next = meetingsFor(k).filter(function (e) { return !e.allDay && e.end > now; })[0];
+      if (next) out += '<section class="qk-sec"><h3>' + (next.begin <= now ? 'Meeting now' : 'Next meeting') + '</h3><div class="qk-one">' +
+        (next.title ? '<b class="notr">' + esc(next.title) + '</b>' : '<b>(No title)</b>') + '<span>' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</span></div></section>';
+    }
+    var open = W().tasks.filter(function (x) { return !x.done; }).sort(function (a, b) {
+      var ra = a.due ? (a.due < k ? 0 : a.due === k ? 1 : 2) : 3, rb = b.due ? (b.due < k ? 0 : b.due === k ? 1 : 2) : 3;
+      return ra - rb || String(a.due || '').localeCompare(String(b.due || ''));
+    }).slice(0, 4);
+    if (open.length) out += '<section class="qk-sec"><h3>Tasks</h3><ul class="qk-list">' + open.map(function (x) {
+      var due = x.due ? (x.due < k ? 'Overdue' : x.due === k ? 'Due today' : 'Due ' + L.shortDate(x.due)) : project(x.project);
+      return '<li><button class="job-tick" data-act="job-task-tick" data-id="' + esc(x.id) + '" aria-label="Mark done"></button><span class="ln"><b class="notr">' + esc(x.title) + '</b><span' + (x.due && x.due <= k ? ' class="job-due"' : '') + '>' + esc(due) + '</span></span></li>';
+    }).join('') + '</ul></section>';
+    return out;
   });
   A['job-go'] = function () { L.setTab('work'); };
   H.resume.push(function () { if (cal.granted) loadCalendar(true); });

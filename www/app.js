@@ -204,7 +204,7 @@
     if (tab === 'report' && t !== 'report' && reportPushed) { reportPushed = false; ignorePop = true; history.back(); }
     tab = t;
     if (t === 'focus' || t === 'report') syncUsage(false);
-    var btns = document.querySelectorAll('#drawer button[data-tab]');
+    var btns = document.querySelectorAll('#drawer button[data-tab], #tabbar button[data-tab]');
     for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-tab') === t);
     render();
     window.scrollTo(0, 0);

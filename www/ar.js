@@ -504,5 +504,6 @@ window.AR_DICT = {
   'Could not ask for permission': 'تعذّر طلب الإذن',
   'Could not start:': 'تعذّر البدء:',
   'Could not save the report:': 'تعذّر حفظ التقرير:',
-  'km': 'كم'
+  'km': 'كم',
+  'Main sections': 'الأقسام الرئيسية'
 };

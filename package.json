@@ -7,7 +7,7 @@
     "preview": "node dev-server.js",
     "sync": "cap sync android",
     "smoke": "node test/smoke.js",
-    "test": "node test/util.test.js && node test/planner.test.js && node test/prayer.test.js"
+    "test": "node test/util.test.js && node test/reminders.test.js && node test/planner.test.js && node test/prayer.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

@@ -157,10 +157,14 @@ if ($Release -and -not (Test-Path $keyProps)) {
 }
 
 $task = if ($Release) { 'assembleRelease' } else { 'assembleDebug' }
+# Release builds normally run a "lint vital" check first, which resolves Capacitor's unit-test libraries
+# (mockito, hamcrest...) from Maven Central. Some company networks block those .jar downloads, and none of
+# them end up in the APK, so skip that check. Run '.\gradlew lintRelease' in android\ to lint by hand.
+$skip = if ($Release) { @('-x', 'lintVitalRelease') } else { @() }
 Write-Host "2/3  Building the APK ($task; first run downloads Gradle, takes a few minutes)..." -ForegroundColor Cyan
 Push-Location android
 $ErrorActionPreference = 'Continue'   # Java prints "Picked up JAVA_TOOL_OPTIONS" on stderr; that is not an error
-.\gradlew.bat $task --no-daemon
+.\gradlew.bat $task @skip --no-daemon
 $code = $LASTEXITCODE
 $ErrorActionPreference = 'Stop'
 Pop-Location

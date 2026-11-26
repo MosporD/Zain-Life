@@ -48,10 +48,13 @@
   /* =====================================================================
      WATER + MOOD + PEOPLE NUDGE (Today)
      ===================================================================== */
+  // Water is kept in millilitres. Days saved before that counted 250 ml glasses; they convert on read.
   function waterGoal() {
     var w = +(L.latestWeight && L.latestWeight()) || (L.st().profile && +L.st().profile.weight) || 80;
-    return clamp(Math.round((w * 0.03) / 0.25), 8, 12);      // ~30 ml per kg, in 250 ml glasses
+    return clamp(Math.round((w * 30) / 250) * 250, 2000, 3000);      // ~30 ml per kg, rounded to 250 ml
   }
+  function waterMl(rec) { return rec.waterMl != null ? rec.waterMl : (rec.water || 0) * 250; }
+  L.waterMl = waterMl;
   var MOODS = ['Low', 'Meh', 'Okay', 'Good', 'Great'];
   // Today's steps as a ring (a pie of the daily goal), from Samsung Health or any app through Health Connect.
   function stepGoal() { var g = +L.st().settings.stepGoal; return g >= 1000 ? Math.round(g) : 8000; }
@@ -73,30 +76,10 @@
       : '';
     return '<section><div class="card steps-dash" data-tab="health" role="button"><div class="ring-row">' + stepRing(steps, goal) + side + '</div></div>' + note + '</section>';
   });
-  H.today.push(function (k, rec) {
-    var n = rec.water || 0, g = waterGoal(), dots = '';
-    for (var i = 0; i < g; i++) dots += '<span class="gl' + (i < n ? ' on' : '') + '"></span>';
-    var water = sec('Water', '<div class="card"><div class="kcal"><span class="big">' + n + '</span><span class="of">of ' + g + ' glasses · ' + num1(n * 0.25) + ' L</span></div>' +
-      '<div class="glasses" aria-hidden="true">' + dots + '</div>' +
-      '<div class="row-btns"><button class="btn" data-act="w-add">+1 glass</button><button class="btn ghost" data-act="w-sub" aria-label="Remove a glass">−1</button></div></div>');
-    var md = rec.mood || {};
-    function scale(key, cur) {
-      return '<div class="choice scale">' + [1, 2, 3, 4, 5].map(function (v) {
-        return '<button type="button" class="chip' + (cur === v ? ' on' : '') + '" data-act="mood" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + v + '<small>' + (key === 'm' ? MOODS[v - 1] : ['Drained', 'Low', 'Okay', 'Good', 'High'][v - 1]) + '</small></button>';
-      }).join('') + '</div>';
-    }
-    var mood = sec('How are you?', '<div class="card"><p class="flabel">Mood</p>' + scale('m', md.m) + '<p class="flabel" style="margin-top:12px">Energy</p>' + scale('e', md.e) +
-      '</div>');
-    var due = overduePeople().slice(0, 2);
-    var people = due.length ? sec('Stay in touch', '<div class="card"><ul class="loglist">' + due.map(function (p) {
-      return '<li><span class="ln"><b>' + esc(p.name) + '</b><span class="muted small">' + (p.last ? daysAgo(p.last) + ' days since you talked' : 'Not logged yet') + '</span></span>' +
-        '<button class="btn ghost" data-act="p-talk" data-id="' + p.id + '">Talked today</button></li>';
-    }).join('') + '</ul></div>') : '';
-    return water + mood;
-  });
+  L.waterGoal = waterGoal;      // the Today tab draws the water card
   H.dashTiles.push(function (k, rec) {
-    var n = rec.water || 0, g = waterGoal();
-    return L.dashTile('Water', n + '/' + g, n >= g ? 'goal reached' : '', 'today');
+    var n = waterMl(rec), g = waterGoal();
+    return L.dashTile('Water', num1(n / 1000) + ' L', n >= g ? 'goal reached' : 'of ' + num1(g / 1000) + ' L', 'today');
   });
   H.dashCards.push(function () {
     var due = overduePeople().slice(0, 3);
@@ -106,20 +89,16 @@
         '<button class="btn ghost" data-act="p-talk" data-id="' + p.id + '">Talked today</button></li>';
     }).join('') + '</ul></div>');
   });
-  A['w-add'] = function () {
-    var r = L.dayRec(todayKey());
-    r.water = (r.water || 0) + 1;
-    if (r.water >= 8) r.habits.water = true;
+  function addWater(ml) {
+    var r = L.dayRec(todayKey()), before = waterMl(r);
+    r.waterMl = Math.max(0, before + ml);
+    delete r.water;
+    r.habits.water = r.waterMl >= 2000;
     L.save(); L.render();
-    if (r.water === waterGoal()) toast('Water goal reached');
-  };
-  A['w-sub'] = function () { var r = L.dayRec(todayKey()); r.water = Math.max(0, (r.water || 0) - 1); if (r.water < 8) r.habits.water = false; L.save(); L.render(); };
-  A.mood = function (el) {
-    var r = L.dayRec(todayKey()), k = el.getAttribute('data-k');
-    r.mood = r.mood || {};
-    r.mood[k] = +el.getAttribute('data-v');
-    L.save(); L.render();
-  };
+    if (ml > 0 && before < waterGoal() && r.waterMl >= waterGoal()) toast('Water goal reached');
+  }
+  A['w-add'] = function (el) { addWater(+el.getAttribute('data-ml') || 250); };
+  A['w-sub'] = function (el) { addWater(-(+el.getAttribute('data-ml') || 250)); };
 
   /* =====================================================================
      FOCUS TIMER
@@ -161,7 +140,7 @@
     return '<button class="tl-move" data-act="ft-open" data-title="' + esc(b.title) + '">Focus</button>';
   });
   function openTimerSheet(title) {
-    L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '" placeholder="e.g. Course, side project, Quran"></label>' +
+    L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '"></label>' +
       '<p class="flabel" style="margin-top:14px">How long?</p><div class="choice">' + [25, 45, 60, 90].map(function (m) {
         return '<button type="button" class="chip" data-act="ft-start" data-v="' + m + '">' + m + ' min</button>';
       }).join('') + '</div><p class="muted small" style="margin-top:10px">You’ll get a notification when it ends. The minutes go into your daily report and weekly review.</p>');
@@ -553,7 +532,7 @@
       '<div class="row-btns"><button class="btn" data-act="sv-new">New goal</button></div>');
   }
   A['sv-new'] = function () {
-    L.openSheet('<h3>New savings goal</h3><label class="field"><span>Name</span><input id="sv-name" placeholder="e.g. Apartment down payment"></label>' +
+    L.openSheet('<h3>New savings goal</h3><label class="field"><span>Name</span><input id="sv-name"></label>' +
       '<label class="field"><span>Target (' + esc(F().savings.cur) + ')</span><input type="number" id="sv-target" inputmode="numeric" min="1"></label>' +
       '<label class="field"><span>Already saved</span><input type="number" id="sv-saved" inputmode="numeric" min="0" value="0"></label>' +
       '<div class="row-btns"><button class="btn" data-act="sv-create">Add goal</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');
@@ -650,7 +629,7 @@
       if (s.rec.screen != null) { scr.push(+s.rec.screen); if (+s.rec.screen > lim) over++; }
       if (s.rec.sleepMin) sleep.push(s.rec.sleepMin);
       if (s.rec.steps != null) steps.push(s.rec.steps);
-      if (s.rec.water) water.push(s.rec.water);
+      if (waterMl(s.rec)) water.push(waterMl(s.rec));
       if (s.rec.mood && s.rec.mood.m) mood.push(s.rec.mood.m);
       if (s.rec.mood && s.rec.mood.e) energy.push(s.rec.mood.e);
       focus += s.rec.focus || 0;
@@ -665,7 +644,7 @@
       (scr.length ? L.statTile('Social media', Math.round(avg(scr)) + ' min/day', over + ' day' + (over === 1 ? '' : 's') + ' over') : '') +
       (sleep.length ? L.statTile('Sleep', fmtSleep(Math.round(avg(sleep))), 'average') : '') +
       (steps.length ? L.statTile('Steps', Math.round(avg(steps)).toLocaleString(), 'a day') : '') +
-      (water.length ? L.statTile('Water', num1(avg(water)), 'glasses a day') : '') +
+      (water.length ? L.statTile('Water', num1(avg(water) / 1000) + ' L', 'a day') : '') +
       (mood.length ? L.statTile('Mood', num1(avg(mood)) + '/5', energy.length ? 'energy ' + num1(avg(energy)) + '/5' : '') : '')
       + (L.weekTiles ? L.weekTiles(days) : '');
     var ws = L.st().weights.filter(function (w) { var d = fromKey(w.date); return d >= W.start && d <= addDays(W.start, 6); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
@@ -847,7 +826,7 @@
   /* ---------------- report tiles ---------------- */
   H.reportTiles.push(function (k, rec) {
     var out = '';
-    if (rec.water) out += L.statTile('Water', rec.water + ' glasses');
+    if (waterMl(rec)) out += L.statTile('Water', num1(waterMl(rec) / 1000) + ' L');
     if (rec.focus) out += L.statTile('Focused', L.fmtDur(rec.focus));
     if (F().workouts[k]) { var n = 0; F().workouts[k].forEach(function (x) { n += x.sets.length; }); out += L.statTile('Workout', n + ' sets'); }
     if (rec.steps != null) out += L.statTile('Steps', rec.steps.toLocaleString());
@@ -976,18 +955,24 @@
   function pushWidget() {
     var n = NP();
     if (!n || !L.st().profile) return;
-    var t = today(), days = {}, done = {};
+    var t = today(), days = {}, done = {}, prayers = {};
     [t, addDays(t, 1)].forEach(function (d) {
       var k = dateKey(d), rec = L.peekDay(k);
-      days[k] = L.blocksForDate(d).filter(function (b) { return b.title !== 'Free time'; })
-        .map(function (b) { return { id: b.id, s: toMin(b.start), e: toMin(b.end) <= toMin(b.start) ? 1440 : toMin(b.end), t: window.I18N ? I18N.str(b.title) : b.title }; });
+      var tr = function (x) { return window.I18N ? I18N.str(x) : x; };
+      days[k] = L.blocksForDate(d).filter(function (b) { return b.title !== 'Free time' && !b.prayer; })
+        .map(function (b) { return { id: b.id, s: toMin(b.start), e: toMin(b.end) <= toMin(b.start) ? 1440 : toMin(b.end), t: tr(b.title) }; });
+      prayers[k] = L.prayerBlocks(d).map(function (p) { return { t: tr(p.title), s: toMin(p.start) }; });
       done[k] = Object.keys(rec.done || {}).filter(function (id) { return rec.done[id]; });
     });
     var ar = L.st().settings.lang === 'ar';
-    var labels = ar ? { now: 'الآن', done: 'الآن · تمّ', next: 'التالي', until: 'حتى', tomorrow: 'غدًا', open: 'وقت حر', nothing: 'لا شيء مخطط', dayDone: 'انتهى اليوم', ready: 'خطة الغد جاهزة', am: 'ص', pm: 'م' } : null;
-    n.setWidget({ data: JSON.stringify({ days: days, done: done, labels: labels }) }).catch(function () {});
+    var labels = ar ? { now: 'الآن', done: 'الآن · تمّ', next: 'التالي', until: 'حتى', tomorrow: 'غدًا', open: 'وقت حر', nothing: 'لا شيء مخطط', dayDone: 'انتهى اليوم', ready: 'خطة الغد جاهزة', am: 'ص', pm: 'م',
+      prayer: 'الصلاة', meeting: 'اجتماع', meetingNow: 'اجتماع الآن' } : null;
+    // Next meetings come from the Work tab's phone-calendar read (times in ms, so they cross midnight cleanly).
+    var meetings = window.ZLWork && ZLWork.upcoming ? ZLWork.upcoming(4) : [];
+    n.setWidget({ data: JSON.stringify({ days: days, done: done, prayers: prayers, meetings: meetings, labels: labels }) }).catch(function () {});
   }
   function pushWidgetSoon() { clearTimeout(widgetTimer); widgetTimer = setTimeout(pushWidget, 1500); }
+  window.ZLWidget = { refresh: pushWidgetSoon };
   // Tasks ticked on the widget are held natively until the app opens, then applied here.
   function pullWidgetDone() {
     var n = NP();

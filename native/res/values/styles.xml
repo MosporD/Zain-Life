@@ -23,5 +23,16 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_swirl</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+    <!-- One line of the home-screen widget (next block, prayer, meeting). -->
+    <style name="WidgetLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">#E4DFFF</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:visibility">gone</item>
+    </style>
 </resources>
 

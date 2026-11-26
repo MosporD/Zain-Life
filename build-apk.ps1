@@ -119,6 +119,23 @@ if ($mx -notmatch 'PlannerWidget') {
        "        </receiver>`n"
   $mx = $mx -replace '</application>', ($w + '    </application>')
 }
+# Company step challenge: GPS every 20 seconds while walking, only during a challenge, as a
+# foreground service with a visible notification. No background-location ("all the time") permission.
+if ($mx -notmatch 'ACTIVITY_RECOGNITION') {
+  $cp = "    <uses-permission android:name=`"android.permission.ACCESS_FINE_LOCATION`" />`n" +
+        "    <uses-permission android:name=`"android.permission.ACCESS_COARSE_LOCATION`" />`n" +
+        "    <uses-permission android:name=`"android.permission.ACTIVITY_RECOGNITION`" />`n" +
+        "    <uses-permission android:name=`"android.permission.FOREGROUND_SERVICE`" />`n" +
+        "    <uses-permission android:name=`"android.permission.FOREGROUND_SERVICE_LOCATION`" />`n" +
+        "    <uses-permission android:name=`"android.permission.WAKE_LOCK`" />`n" +
+        "    <uses-feature android:name=`"android.hardware.location.gps`" android:required=`"false`" />`n" +
+        "    <uses-feature android:name=`"android.hardware.sensor.stepcounter`" android:required=`"false`" />`n"
+  $mx = $mx -replace '</manifest>', ($cp + '</manifest>')
+}
+if ($mx -notmatch 'ChallengeService') {
+  $svc = "        <service android:name=`".ChallengeService`" android:exported=`"false`" android:foregroundServiceType=`"location`" />`n"
+  $mx = $mx -replace '</application>', ($svc + '    </application>')
+}
 # App name shown under the icon and on the widget.
 $mx = $mx -replace 'android:label="(Life Planner|Zainers Health)"', 'android:label="Zain Life"'
 $strings = Join-Path $PSScriptRoot 'android\app\src\main\res\values\strings.xml'

@@ -45,6 +45,7 @@
       if (!cal.granted) return;
       return n.calendarEvents({ days: 2 }).then(function (res) {
         cal.events = (res && res.events) || []; cal.loadedAt = Date.now(); cal.error = '';
+        if (window.ZLWidget) ZLWidget.refresh();
       });
     }).catch(function (e) { cal.error = (e && e.message) || 'error'; }).then(rerender);
   }
@@ -147,6 +148,7 @@
     if (!x) return;
     x.done = !x.done; x.doneAt = x.done ? todayKey() : null;
     L.save(); L.render(); if (x.done) toast('Done: ' + x.title);
+    if (L.sheetOpen() && document.querySelector('#sheet-root .qk-top')) A['qk-open']();   // refresh the centre-button sheet
   };
   A['job-task-del'] = function (el) {
     if (!L.armed(el, 'Tap again to remove')) return;
@@ -222,7 +224,7 @@
   }
   function openTimerSheet() {
     L.openSheet('<h3>Start timer</h3><label class="field"><span>Project</span><select id="job-t-proj">' + projectOptions(lastProject) + '</select></label>' +
-      '<label class="field"><span>What are you working on? (optional)</span><input type="text" id="job-t-note" maxlength="80" placeholder="e.g. Weekly KPI report"></label>' +
+      '<label class="field"><span>What are you working on? (optional)</span><input type="text" id="job-t-note" maxlength="80"></label>' +
       '<div class="row-btns"><button class="btn" data-act="job-timer-start">Start</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');
   }
   A['job-timer-open'] = openTimerSheet;
@@ -293,8 +295,8 @@
   function hoursText(h) { return fmt12(L.minToT(h.start % 1440)) + ' – ' + fmt12(L.minToT(h.end % 1440)) + (h.end > 1440 ? ' (overnight)' : ''); }
   function hoursForm(h, inSheet) {
     return '<div class="job-hrs" data-sheet="' + (inSheet ? 1 : 0) + '"><div class="two">' +
-      '<label class="field"><span>Starts</span><input type="time" step="900" class="job-hrs-s" value="' + L.minToT(h.start) + '"></label>' +
-      '<label class="field"><span>Ends</span><input type="time" step="900" class="job-hrs-e" value="' + L.minToT(h.end % 1440) + '"></label></div>' +
+      '<label class="field"><span>Starts</span>' + L.timeSelect('class="job-hrs-s"', L.minToT(h.start)) + '</label>' +
+      '<label class="field"><span>Ends</span>' + L.timeSelect('class="job-hrs-e"', L.minToT(h.end % 1440)) + '</label></div>' +
       '<p class="flabel" style="margin-top:14px">Work days</p><div class="choice">' + L.DAYS.map(function (n, i) {
         var on = h.days.indexOf(i) >= 0;
         return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-act="job-hrs-day" data-v="' + i + '" aria-pressed="' + on + '">' + n + '</button>';
@@ -347,16 +349,41 @@
   function renderWork() { W(); return setupCard() + headerCard() + meetingsSection() + tasksSection() + timeSection(); }
   L.TABS.work = ['Work', renderWork];
 
-  // Today tab: a one-line reminder of the next meeting, when calendar access is on.
-  H.todayTop.push(function () {
+  // Inside the Now card: a line for the next meeting, when calendar access is on.
+  H.nowExtra.push(function () {
     if (!cal.granted || !cal.events) return '';
     var now = Date.now(), k = todayKey();
     var next = meetingsFor(k).filter(function (e) { return !e.allDay && e.end > now; })[0];
     if (!next) return '';
     var live = next.begin <= now;
-    return '<button class="card dcard job-next" data-act="job-go"><span class="lbl">' + (live ? 'Meeting now' : 'Next meeting') + '</span>' + (next.title ? '<b class="notr">' + esc(next.title) + '</b>' : '<b>(No title)</b>') +
-      '<span class="muted small">' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</span></button>';
+    return '<button class="nextline job-nowline" data-act="job-go"><b>' + (live ? 'Meeting now' : 'Meeting') + '</b>' + (next.title ? '<span class="notr">' + esc(next.title) + '</span>' : '(No title)') +
+      ' · ' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</button>';
   });
+  // Centre button: next meeting and the tasks to do first (overdue, due today, then the rest).
+  H.quick.push(function () {
+    var k = todayKey(), now = Date.now(), out = '';
+    if (cal.granted && cal.events) {
+      var next = meetingsFor(k).filter(function (e) { return !e.allDay && e.end > now; })[0];
+      if (next) out += '<section class="qk-sec"><h3>' + (next.begin <= now ? 'Meeting now' : 'Next meeting') + '</h3><div class="qk-one">' +
+        (next.title ? '<b class="notr">' + esc(next.title) + '</b>' : '<b>(No title)</b>') + '<span>' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</span></div></section>';
+    }
+    var open = W().tasks.filter(function (x) { return !x.done; }).sort(function (a, b) {
+      var ra = a.due ? (a.due < k ? 0 : a.due === k ? 1 : 2) : 3, rb = b.due ? (b.due < k ? 0 : b.due === k ? 1 : 2) : 3;
+      return ra - rb || String(a.due || '').localeCompare(String(b.due || ''));
+    }).slice(0, 4);
+    if (open.length) out += '<section class="qk-sec"><h3>Tasks</h3><ul class="qk-list">' + open.map(function (x) {
+      var due = x.due ? (x.due < k ? 'Overdue' : x.due === k ? 'Due today' : 'Due ' + L.shortDate(x.due)) : project(x.project);
+      return '<li><button class="job-tick" data-act="job-task-tick" data-id="' + esc(x.id) + '" aria-label="Mark done"></button><span class="ln"><b class="notr">' + esc(x.title) + '</b><span' + (x.due && x.due <= k ? ' class="job-due"' : '') + '>' + esc(due) + '</span></span></li>';
+    }).join('') + '</ul></section>';
+    return out;
+  });
+  // For the home-screen widget: the next few timed meetings that haven't ended.
+  window.ZLWork = { upcoming: function (n) {
+    if (!cal.granted || !cal.events) return [];
+    var now = Date.now();
+    return cal.events.filter(function (e) { return !e.allDay && e.end > now; }).sort(function (a, b) { return a.begin - b.begin; })
+      .slice(0, n || 3).map(function (e) { return { t: e.title || '(No title)', b: e.begin, e: e.end }; });
+  } };
   A['job-go'] = function () { L.setTab('work'); };
   H.resume.push(function () { if (cal.granted) loadCalendar(true); });
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { loadCalendar(false); }, 3000); });

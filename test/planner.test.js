@@ -104,3 +104,39 @@ assert(sun.find(b => b.title === 'Meal').remind, 'meal reminds');
 assert(!sun.find(b => b.title === 'Free time').remind, 'free time silent');
 assert(!res.templates[5].find(b => b.title === 'Sleep').remind, 'sleep silent');
 console.log('\nALL PLANNER TESTS PASSED');
+
+// Hour ranges chosen in setup, and the extra goals.
+{
+  const p2 = JSON.parse(JSON.stringify(profile));
+  p2.goals = ['weight', 'career', 'money', 'mind', 'social', 'reading', 'other'];
+  p2.weightQ = { direction: 'lose', goal: 85, pace: 'steady', activity: 'desk', days: 3, from: 17, to: 20 };
+  p2.careerQ = { focus: 'other', focusOther: 'Public speaking', hours: 3, from: 20, to: 22, where: 'any' };
+  p2.moneyQ = { monthly: 150, hours: 1, from: 20, to: 22, where: 'any' };
+  p2.mindQ = { how: 'meditate', mins: 15, from: 21, to: 23 };
+  p2.socialQ = { who: 'family', hours: 3, from: 18, to: 21, where: 'weekend' };
+  p2.readQ = { mins: 20, from: 21, to: 23 };
+  p2.otherQ = { name: 'Learn to cook', hours: 2, from: 19, to: 21, where: 'any' };
+  const r2 = P.buildTemplates(p2, 30);
+  const mins = t => +t.slice(0, 2) * 60 + +t.slice(3);
+  const find = (d, t) => r2.templates[d].filter(b => b.title.startsWith(t));
+  const days = [0, 1, 2, 3, 4, 5, 6].map(d => r2.templates[d]);
+  // Training (Sundays, Tuesdays, Thursdays) sits inside 5 pm to 8 pm.
+  [0, 2, 4].forEach(d => {
+    const b = find(d, 'Training')[0];
+    assert(b, 'training on ' + d);
+    assert(mins(b.start) >= 17 * 60 && mins(b.end) <= 20 * 60, 'training outside the chosen hours: ' + b.start + '-' + b.end);
+  });
+  // Mind and reading are daily and stay inside their windows.
+  for (let d = 0; d < 7; d++) {
+    const m = find(d, 'Meditation')[0], rd = find(d, 'Reading')[0];
+    assert(m && mins(m.start) >= 21 * 60 && mins(m.end) <= 23 * 60, 'mind block day ' + d);
+    assert(rd, 'reading block day ' + d);
+  }
+  assert(days.some(day => day.some(b => b.title.startsWith('Career · Public speaking'))), 'own career focus is named');
+  assert(days.some(day => day.some(b => b.title === 'Learn to cook')), 'own goal is placed');
+  assert(days.some(day => day.some(b => b.title === 'Money check-in')), 'money check-in is placed');
+  assert(r2.notes.some(n => /aiming to save 150/.test(n)), 'saving target is in the notes');
+  // "Mostly my days off" fills Friday and Saturday (the profile's days off) first.
+  assert(find(5, 'Family time').length + find(6, 'Family time').length >= 1, 'family time on days off');
+  console.log('hour ranges and extra goals: ok');
+}

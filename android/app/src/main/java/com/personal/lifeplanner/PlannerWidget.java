@@ -16,7 +16,8 @@ import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/** Home-screen widget: "Now" and "Next" from today's plan, with a ✓ to tick the current task. */
+/** Home-screen widget: "Now" from today's plan (with a ✓ to tick it), then the next block, the next prayer
+ *  and the next meeting from the phone's calendar. */
 public class PlannerWidget extends AppWidgetProvider {
     static final String ACTION_DONE = "com.personal.lifeplanner.WIDGET_DONE";
     static final String ACTION_TICK = "com.personal.lifeplanner.WIDGET_TICK";
@@ -102,8 +103,12 @@ public class PlannerWidget extends AppWidgetProvider {
         cal.add(Calendar.DAY_OF_MONTH, 1);
         String tomorrow = f.format(cal.getTime());
 
-        JSONObject cur = null, next = null;
-        boolean nextTomorrow = false, curDone = false;
+        JSONObject cur = null, next = null, prayer = null, meeting = null;
+        boolean nextTomorrow = false, curDone = false, prayerTomorrow = false;
+        long nowMs = System.currentTimeMillis();
+        Calendar mid = Calendar.getInstance();
+        mid.set(Calendar.HOUR_OF_DAY, 0); mid.set(Calendar.MINUTE, 0); mid.set(Calendar.SECOND, 0); mid.set(Calendar.MILLISECOND, 0);
+        long midMs = mid.getTimeInMillis();
         int nextChange = -1;
         try {
             JSONObject data = new JSONObject(prefs(c).getString("data", "{}"));
@@ -128,9 +133,30 @@ public class PlannerWidget extends AppWidgetProvider {
                     nextTomorrow = next != null;
                 }
             }
+            JSONObject prayers = data.optJSONObject("prayers");
+            JSONArray pt = prayers == null ? null : prayers.optJSONArray(today);
+            if (pt != null) for (int i = 0; i < pt.length(); i++) {
+                JSONObject p = pt.getJSONObject(i);
+                if (p.getInt("s") > now && (prayer == null || p.getInt("s") < prayer.getInt("s"))) prayer = p;
+            }
+            if (prayer == null && prayers != null) {
+                JSONArray tp = prayers.optJSONArray(tomorrow);
+                if (tp != null && tp.length() > 0) { prayer = tp.getJSONObject(0); prayerTomorrow = true; }
+            }
+            JSONArray ms = data.optJSONArray("meetings");
+            if (ms != null) for (int i = 0; i < ms.length(); i++) {
+                JSONObject x = ms.getJSONObject(i);
+                if (x.getLong("e") > nowMs && (meeting == null || x.getLong("b") < meeting.getLong("b"))) meeting = x;
+            }
             if (cur != null) curDone = contains(done == null ? null : done.optJSONArray(today), cur.getString("id"));
             if (cur != null) nextChange = cur.getInt("e");
             if (next != null && !nextTomorrow && (nextChange < 0 || next.getInt("s") < nextChange)) nextChange = next.getInt("s");
+            if (prayer != null && !prayerTomorrow && (nextChange < 0 || prayer.getInt("s") < nextChange)) nextChange = prayer.getInt("s");
+            if (meeting != null) {   // redraw when it starts, and again when it ends
+                int mb = (int) ((meeting.getLong("b") - midMs) / 60000), me = (int) ((meeting.getLong("e") - midMs) / 60000);
+                int edge = mb > now ? mb : me;
+                if (edge > now && edge < 1440 && (nextChange < 0 || edge < nextChange)) nextChange = edge;
+            }
         } catch (Exception ignored) { }
 
         if (cur != null) {
@@ -142,7 +168,18 @@ public class PlannerWidget extends AppWidgetProvider {
             v.setTextViewText(R.id.w_now, next == null ? t("dayDone", "Day is done") : t("open", "Open time"));
             v.setTextViewText(R.id.w_until, next == null ? t("ready", "Tomorrow’s plan is ready") : t("nothing", "Nothing planned"));
         }
-        v.setTextViewText(R.id.w_next, next == null ? "" : t("next", "Next") + " · " + next.optString("t") + " · " + (nextTomorrow ? t("tomorrow", "tomorrow") + " " : "") + fmt(next.optInt("s")));
+        line(v, R.id.w_next, next == null ? null : t("next", "Next") + " · " + next.optString("t") + " · " + (nextTomorrow ? t("tomorrow", "tomorrow") + " " : "") + fmt(next.optInt("s")));
+        line(v, R.id.w_prayer, prayer == null ? null : t("prayer", "Prayer") + " · " + prayer.optString("t") + " · " + (prayerTomorrow ? t("tomorrow", "tomorrow") + " " : "") + fmt(prayer.optInt("s")));
+        if (meeting != null) {
+            long b = meeting.optLong("b");
+            boolean live = b <= nowMs;
+            int mb = (int) ((b - midMs) / 60000);
+            String when = live ? t("until", "until") + " " + fmt((int) ((meeting.optLong("e") - midMs) / 60000))
+                : (mb >= 1440 ? (mb < 2880 ? t("tomorrow", "tomorrow") + " " : "") : "") + fmt(mb);
+            line(v, R.id.w_meeting, (live ? t("meetingNow", "Meeting now") : t("meeting", "Meeting")) + " · " + meeting.optString("t") + " · " + when);
+        } else {
+            line(v, R.id.w_meeting, null);
+        }
 
         if (cur != null && !curDone) {
             Intent d = new Intent(c, PlannerWidget.class).setAction(ACTION_DONE)
@@ -164,6 +201,12 @@ public class PlannerWidget extends AppWidgetProvider {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.set(AlarmManager.RTC, at.getTimeInMillis(), tickIntent(c));
         return v;
+    }
+
+    private static void line(RemoteViews v, int id, String text) {
+        if (text == null) { v.setViewVisibility(id, View.GONE); return; }
+        v.setTextViewText(id, text);
+        v.setViewVisibility(id, View.VISIBLE);
     }
 
     private static PendingIntent tickIntent(Context c) {

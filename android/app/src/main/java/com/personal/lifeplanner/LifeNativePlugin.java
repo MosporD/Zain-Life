@@ -1,5 +1,6 @@
 package com.personal.lifeplanner;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -12,6 +13,7 @@ import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
@@ -20,10 +22,13 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 
-/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect). */
+/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect, calendar). */
 @CapacitorPlugin(
     name = "LifeNative",
-    permissions = { @Permission(alias = "health", strings = { HealthBridge.READ_STEPS, HealthBridge.READ_SLEEP }) }
+    permissions = {
+        @Permission(alias = "health", strings = { HealthBridge.READ_STEPS, HealthBridge.READ_SLEEP }),
+        @Permission(alias = "calendar", strings = { Manifest.permission.READ_CALENDAR })
+    }
 )
 public class LifeNativePlugin extends Plugin {
 
@@ -99,6 +104,38 @@ public class LifeNativePlugin extends Plugin {
             JSONArray arr = HealthBridge.daily(c, days);
             JSObject res = new JSObject();
             try { res.put("days", new JSArray(arr.toString())); } catch (Exception e) { res.put("days", new JSArray()); }
+            call.resolve(res);
+        }).start();
+    }
+
+    /** {granted}: whether the person has allowed reading the phone's calendar. */
+    @PluginMethod
+    public void calendarStatus(PluginCall call) {
+        JSObject res = new JSObject();
+        res.put("granted", getPermissionState("calendar") == PermissionState.GRANTED);
+        call.resolve(res);
+    }
+
+    /** Shows Android's calendar permission prompt (read-only access). */
+    @PluginMethod
+    public void calendarRequest(PluginCall call) {
+        if (getPermissionState("calendar") == PermissionState.GRANTED) { calendarStatus(call); return; }
+        requestPermissionForAlias("calendar", call, "calendarPermsCallback");
+    }
+
+    @PermissionCallback
+    private void calendarPermsCallback(PluginCall call) { calendarStatus(call); }
+
+    /** {days}: [{title, begin, end, allDay, location, calendar}] from the start of today. */
+    @PluginMethod
+    public void calendarEvents(PluginCall call) {
+        if (getPermissionState("calendar") != PermissionState.GRANTED) { call.reject("Calendar access is off"); return; }
+        final Context c = getContext();
+        final int days = Math.max(1, Math.min(14, call.getInt("days", 2)));
+        new Thread(() -> {
+            JSONArray arr = CalendarBridge.events(c, days);
+            JSObject res = new JSObject();
+            try { res.put("events", new JSArray(arr.toString())); } catch (Exception e) { res.put("events", new JSArray()); }
             call.resolve(res);
         }).start();
     }

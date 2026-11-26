@@ -89,6 +89,10 @@ if ($mx -notmatch 'ViewPermissionUsageActivity') {
            "        </activity-alias>`n"
   $mx = $mx -replace '</application>', ($alias + '    </application>')
 }
+# Meetings in the Work tab: read-only access to the phone's calendars (asked the first time it is used).
+if ($mx -notmatch 'READ_CALENDAR') {
+  $mx = $mx -replace '</manifest>', ("    <uses-permission android:name=`"android.permission.READ_CALENDAR`" />`n" + '</manifest>')
+}
 # Home-screen widget.
 if ($mx -notmatch 'PlannerWidget') {
   $w = "        <receiver android:name=`".PlannerWidget`" android:exported=`"false`" android:label=`"Zain Life`">`n" +

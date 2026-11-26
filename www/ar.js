@@ -571,5 +571,8 @@ window.AR_DICT = {
   'Tap a face in “Now” on the Today tab as your day goes. Each part of your plan gets its own mood, and they add up here.': 'اضغط على وجه في «الآن» في تبويب اليوم أثناء يومك. كل جزء من خطتك له مزاجه، وتتجمع هنا.',
   'Meeting': 'اجتماع',
   'Hour': 'الساعة',
-  'End of the day': 'نهاية اليوم'
+  'End of the day': 'نهاية اليوم',
+  'Glass blur': 'تأثير الزجاج',
+  'Turn off if scrolling feels slow on your phone': 'أوقفه إذا كان التمرير بطيئًا على هاتفك',
+  '+1 L': '+1 لتر', '+0.5 L': '+0.5 لتر', '+0.25 L': '+0.25 لتر', '−1 L': '−1 لتر', '−0.5 L': '−0.5 لتر', '−0.25 L': '−0.25 لتر'
 };

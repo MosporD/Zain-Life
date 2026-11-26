@@ -96,11 +96,11 @@
       return '<li><span class="ln"><b>' + esc(e.name) + (q !== 1 ? ' × ' + L.num1(q) : '') + '</b><span>' + esc(e.unit || '') + '</span></span>' +
         '<span class="lk">' + kcal + '</span><button class="x" data-act="td-food-del" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">×</button></li>';
     }).join('') + '</ul>' : '<p class="muted small" style="margin-top:10px">Nothing eaten yet today.</p>';
-    var n = rec.water || 0, g = L.waterGoal ? L.waterGoal() : 8, dots = '';
-    for (var i = 0; i < g; i++) dots += '<span class="gl' + (i < n ? ' on' : '') + '"></span>';
-    var water = '<div class="nut-water"><div class="kcal"><span class="lbl">Water</span><span class="of">' + n + ' of ' + g + ' glasses · ' + L.num1(n * 0.25) + ' L</span></div>' +
-      '<div class="glasses" aria-hidden="true">' + dots + '</div>' +
-      '<div class="row-btns"><button class="btn" data-act="w-add">+1 glass</button><button class="btn ghost" data-act="w-sub" aria-label="Remove a glass">−1</button></div></div>';
+    var n = L.waterMl(rec), g = L.waterGoal();
+    var water = '<div class="nut-water"><div class="kcal"><span class="lbl">Water</span><span class="of">' + n.toLocaleString() + ' ml of ' + g.toLocaleString() + ' ml</span></div>' +
+      '<div class="track" style="margin-top:8px" aria-hidden="true"><span style="width:' + Math.min(100, n / g * 100).toFixed(1) + '%"></span></div>' +
+      '<div class="row-btns">' + [[1000, '1 L'], [500, '0.5 L'], [250, '0.25 L']].map(function (x) { return '<button class="btn" data-act="w-add" data-ml="' + x[0] + '">+' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="row-btns">' + [[1000, '1 L'], [500, '0.5 L'], [250, '0.25 L']].map(function (x) { return '<button class="btn ghost" data-act="w-sub" data-ml="' + x[0] + '">−' + x[1] + '</button>'; }).join('') + '</div></div>';
     return sec('Nutrition', '<div class="card">' + head + list +
       '<div class="row-btns"><button class="btn" data-act="td-add-food">+ Add food</button><button class="btn ghost" data-act="td-repeat">Repeat yesterday</button></div>' + water + '</div>');
   }

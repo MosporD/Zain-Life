@@ -197,7 +197,8 @@
     var light = state.settings.theme === 'light';
     document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
     var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', light ? '#e3edf9' : '#2b2444');
+    if (m) m.setAttribute('content', light ? '#dfe9ff' : '#120d2b');
+    document.body.classList.toggle('noglass', state.settings.glass === false);
   }
 
   var TABS = {
@@ -1432,6 +1433,8 @@
       '<div class="setrow"><span class="st">Theme</span><span class="chips">' +
       '<button class="chip' + (st.theme !== 'light' ? ' on' : '') + '" data-act="theme" data-v="dark">Dark</button>' +
       '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div>' +
+      '<label class="setrow"><span><span class="st">Glass blur</span><br><span class="sd">Turn off if scrolling feels slow on your phone</span></span>' +
+      '<span class="switch"><input type="checkbox" id="set-glass"' + (st.glass !== false ? ' checked' : '') + '><span></span></span></label>' +
       '</div></section>' +
       '<section><h2>Reminders</h2><div class="card">' +
       '<label class="setrow"><span><span class="st">Block reminders</span><br><span class="sd">' + (native ? '5 minutes before each task, and when it starts' : 'Works in the installed app') + '</span></span>' +
@@ -1865,6 +1868,7 @@
       });
       return;
     }
+    if (t.id === 'set-glass') { state.settings.glass = t.checked; save(); applyTheme(); return; }
     if (t.id === 'set-quiet' || t.id === 'set-fajr') {
       state.settings[t.id === 'set-quiet' ? 'quietSleep' : 'fajrWake'] = t.checked;
       save(); reschedule(); toast('Saved');

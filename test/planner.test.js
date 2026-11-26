@@ -45,6 +45,19 @@ assert(res.templates[1].filter(b => b.title.startsWith('Scroll window')).length 
 assert(has(1, 'Wind down'), 'wind down');
 assert(has(5, 'Sleep'), 'post-midnight sleep block');
 
+// Overnight shift (Sun–Thu, 10 pm – 6 am): the tail of each shift lands on the next calendar day.
+{
+  const night = Object.assign({}, profile, { workDays: [0, 1, 2, 3, 4], grids: Object.assign({}, profile.grids, { idealWork: { wake: 15, sleep: 31, cells: fill(22, 30, 'work') } }) });
+  const n = P.buildTemplates(night, 30).templates;
+  const work = d => n[d].filter(b => b.cat === 'work').map(b => b.start + '-' + b.end).join(',');
+  assert(work(0) === '22:00-23:59', 'Sunday: shift starts at 10 pm only, got ' + work(0));
+  assert(work(1) === '00:00-06:00,22:00-23:59', 'Monday: end of Sunday shift + own shift, got ' + work(1));
+  assert(work(5) === '00:00-06:00', 'Friday: end of Thursday shift, got ' + work(5));
+  assert(work(6) === '', 'Saturday: no work');
+  assert(n[0][0].title === 'Sleep' && n[0][0].start === '00:00', 'Sunday morning before the first shift is sleep');
+  for (let d = 0; d < 7; d++) for (let i = 1; i < n[d].length; i++) assert(n[d][i].start >= n[d][i - 1].end, 'overlap on day ' + d);
+}
+
 const m = P.macroTargets(profile);
 console.log('\nmacros:', m);
 assert(m.kcal > 2000 && m.kcal < 2700, 'kcal sane');

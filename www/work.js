@@ -97,7 +97,9 @@
   function running() { var t = W().timer; return t ? Math.max(0, Math.round((Date.now() - t.start) / 60000)) : 0; }
   function headerCard() {
     var wb = workBlocks(today()), first = wb[0], last = wb[wb.length - 1];
-    var hours = wb.length ? fmt12(first.start) + ' – ' + fmt12(last.end) : '';
+    var rh = readHours(), isDay = rh && rh.days.indexOf(today().getDay()) >= 0;
+    var hours = isDay && W().hoursSet ? hoursText(rh) : !wb.length ? '' :
+      first.start === '00:00' && wb.length === 1 ? 'Until ' + fmt12(last.end) + ' (last night’s shift)' : fmt12(first.start) + ' – ' + fmt12(last.end);
     return '<section><div class="card job-head"><div class="job-hrow"><span><span class="lbl">' + (wb.length ? 'Work today' : 'No work planned today') + '</span>' +
       (hours ? '<b class="job-hours">' + esc(hours) + '</b>' : '') + '</span>' +
       '<span class="job-logged"><b>' + esc(fmtDur(minsLogged(todayKey()))) + '</b><span class="muted small">logged</span></span></div>' +
@@ -260,7 +262,7 @@
   /* ---------------- tab ---------------- */
   /* ---------------- work hours (set by the person, not everyone works 8 to 5) ---------------- */
   // The plan is built from the hour-by-hour workday grid, so changing hours repaints the "work"
-  // cells there and rebuilds the workday templates. Weekend templates are kept unless work days change.
+  // cells there and rebuilds the workday templates. Other days are kept unless work days change (the day after a workday is rebuilt too, for night shifts).
   function grids() { var p = L.st().profile; return p && p.grids && (p.grids.idealWork || p.grids.curWork) ? p.grids : null; }
   function cellVal(g, h, q) { var c = g.cells || {}; return g.split && g.split[h] ? c[h + ':' + q] : c[h]; }
   function readHours() {
@@ -279,11 +281,16 @@
       if (!g.split[h]) { var v = g.cells[h]; delete g.cells[h]; g.split[h] = true; for (var i = 0; i < 4; i++) if (v) g.cells[h + ':' + i] = v; }
       for (var q = 0; q < 4; q++) { var m = h * 60 + q * 15; if (m >= s && m < e) g.cells[h + ':' + q] = 'work'; }
     }
-    g.wake = Math.min(g.wake, Math.floor(s / 60));
-    g.sleep = Math.max(g.sleep, Math.ceil(e / 60));
+    if (e > 1440) {                       // overnight: sleep an hour after the shift, for 8 hours, then the day starts
+      g.sleep = Math.ceil(e / 60) + 1;
+      g.wake = g.sleep + 8 - 24;
+    } else {                              // day shift (also undoes an earlier night pattern)
+      g.wake = Math.min(g.wake > 12 ? 7 : g.wake, Math.floor(s / 60));
+      g.sleep = Math.max(g.sleep > 26 ? 23 : g.sleep, Math.ceil(e / 60));
+    }
   }
   function daysText(days) { return days.length ? days.slice().sort().map(function (d) { return L.DAYS[d]; }).join(', ') : 'No work days'; }
-  function hoursText(h) { return fmt12(L.minToT(h.start)) + ' – ' + fmt12(L.minToT(h.end)); }
+  function hoursText(h) { return fmt12(L.minToT(h.start % 1440)) + ' – ' + fmt12(L.minToT(h.end % 1440)) + (h.end > 1440 ? ' (overnight)' : ''); }
   function hoursForm(h, inSheet) {
     return '<div class="job-hrs" data-sheet="' + (inSheet ? 1 : 0) + '"><div class="two">' +
       '<label class="field"><span>Starts</span><input type="time" step="900" class="job-hrs-s" value="' + L.minToT(h.start) + '"></label>' +
@@ -292,7 +299,7 @@
         var on = h.days.indexOf(i) >= 0;
         return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-act="job-hrs-day" data-v="' + i + '" aria-pressed="' + on + '">' + n + '</button>';
       }).join('') + '</div>' +
-      '<p class="muted small" style="margin-top:12px">Your plan is rebuilt around these hours. Changes you made by hand to workdays in the Plan tab are replaced.</p>' +
+      '<p class="muted small" style="margin-top:12px">Your plan is rebuilt around these hours. Changes you made by hand to workdays in the Plan tab are replaced. For a night shift, set an end time earlier than the start, like 10 pm to 6 am.</p>' +
       '<div class="row-btns"><button class="btn" data-act="job-hrs-save">Save hours</button>' + (inSheet ? '<button class="btn ghost" data-act="close-sheet">Cancel</button>' : '') + '</div></div>';
   }
   function setupCard() {
@@ -314,7 +321,7 @@
     if (isNaN(s) || isNaN(e)) { toast('Enter a start and an end time.'); return; }
     s = Math.round(s / 15) * 15; e = Math.round(e / 15) * 15;
     if (e === 0) e = 1440;
-    if (e <= s) { toast('Pick an end time after the start time. Overnight shifts aren’t supported yet.'); return; }
+    if (e <= s) e += 1440;                // ends the next morning: an overnight shift
     if (e - s > 16 * 60) { toast('That’s more than 16 hours. Check the times.'); return; }
     var days = [].map.call(box.querySelectorAll('[data-act="job-hrs-day"].on'), function (b) { return +b.getAttribute('data-v'); }).sort();
     var oldDays = (p.workDays || []).slice().sort().join(), G = p.grids;
@@ -324,7 +331,8 @@
     p.workDays = days;
     var res = window.Planner.buildTemplates(p, st.settings.limit), same = days.join() === oldDays;
     st.templates = st.templates || {};
-    for (var d = 0; d < 7; d++) if (!same || days.indexOf(d) >= 0) st.templates[d] = res.templates[d];
+    // Workdays change, and so does the morning after each one (a night shift ends there).
+    for (var d = 0; d < 7; d++) if (!same || days.indexOf(d) >= 0 || days.indexOf((d + 6) % 7) >= 0) st.templates[d] = res.templates[d];
     W().hoursSet = true;
     L.save(); if (L.sheetOpen()) L.closeSheet(); L.queueReschedule(); L.render();
     toast('Work hours saved');

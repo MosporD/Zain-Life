@@ -129,17 +129,19 @@ $sx = [IO.File]::ReadAllText($strings) -replace '>(Life Planner|Zainers Health)<
 Copy-Item (Join-Path $PSScriptRoot 'native\java\*') 'android\app\src\main\java' -Recurse -Force
 
 # If a copy of Gradle was placed in gradle-dist\ by hand, verify it and build from it instead of downloading.
-$localZip = Join-Path $PSScriptRoot 'gradle-dist\gradle-8.2.1-bin.zip'
-$official = '03ec176d388f2aa99defcadc3ac6adf8dd2bce5145a129659537c0874dea5ad1'   # from gradle.org
+# Capacitor 8's Android Gradle plugin (8.13) needs Gradle 8.13 or newer.
+$gradleVer = '8.14.3'
+$localZip = Join-Path $PSScriptRoot "gradle-dist\gradle-$gradleVer-bin.zip"
+$official = 'bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531'   # from services.gradle.org
 $wp = Join-Path $PSScriptRoot 'android\gradle\wrapper\gradle-wrapper.properties'
 $props = [IO.File]::ReadAllText($wp)
 if (Test-Path $localZip) {
   $sha = (Get-FileHash $localZip -Algorithm SHA256).Hash.ToLower()
-  if ($sha -ne $official) { throw "gradle-dist\gradle-8.2.1-bin.zip does not match the official checksum. Delete it and download it again from https://gradle.org/releases (version 8.2.1, binary-only)." }
-  Write-Host '     Using the verified local copy of Gradle 8.2.1.' -ForegroundColor DarkGray
+  if ($sha -ne $official) { throw "gradle-dist\gradle-$gradleVer-bin.zip does not match the official checksum. Delete it and download it again from https://gradle.org/releases (version $gradleVer, binary-only)." }
+  Write-Host "     Using the verified local copy of Gradle $gradleVer." -ForegroundColor DarkGray
   $url = 'file:///' + ($localZip -replace '\\', '/')
 } else {
-  $url = 'https\://services.gradle.org/distributions/gradle-8.2.1-bin.zip'
+  $url = "https\://services.gradle.org/distributions/gradle-$gradleVer-bin.zip"
 }
 $props = $props -replace '(?m)^distributionUrl=.*$', "distributionUrl=$url"
 $props = $props -replace '(?m)^networkTimeout=.*$', 'networkTimeout=120000'   # slow links stall >10s

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Zain Life</string>
+    <string name="title_activity_main">Zain Life</string>
+    <string name="package_name">com.personal.lifeplanner</string>
+    <string name="custom_url_scheme">com.personal.lifeplanner</string>
+</resources>

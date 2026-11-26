@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Zain Life</title>
+<script>
+  // Apply a saved light theme before anything paints, so the welcome screen matches.
+  try { var s = JSON.parse(localStorage.getItem('lifeplanner.v1')); if (s && s.settings && s.settings.theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); if (s && s.settings && s.settings.lang === 'ar') { document.documentElement.setAttribute('dir', 'rtl'); document.documentElement.setAttribute('lang', 'ar'); } } catch (e) {}
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="splash" aria-hidden="true">
+  <div class="sp-swirlwrap">
+    <svg class="sp-swirl" viewBox="-1 2 44.5 42.5">
+      <path class="sp-outline" pathLength="1" d="M33.1075 15.7299C33.1075 12.2743 30.4499 9.66059 26.6571 9.95169C18.6087 10.5695 17.5699 19.7237 22.8099 20.3101C28.2886 20.9216 30.2488 15.1288 30.3535 14.8042C30.3535 14.8021 30.3577 14.8021 30.3577 14.8042C30.3703 15.1979 30.6614 23.1688 22.5334 23.1688C18.3092 23.1688 16.1353 19.7174 16.1353 16.7247C16.1353 12.291 20.4496 7.88043 26.5335 7.64587C29.9431 7.51393 32.1881 8.32024 33.9474 10.0794C37.5328 13.6649 36.5003 20.3876 33.5976 23.7071C28.9922 28.9763 22.5167 30.3146 16.4851 27.6108C10.4535 24.905 8.2901 17.0744 11.9467 10.5213C13.2913 8.11081 18.1752 2.74102 26.567 2.74102C37.2207 2.74102 42.624 10.2931 41.6481 19.1645C40.9004 25.9626 36.7705 30.8863 34.8563 32.966C26.4456 42.1055 14.0871 43.9275 6.30051 39.1756C2.01558 36.5598 -0.47664 31.8644 0.0762554 26.5511C0.551661 30.39 2.46376 33.7094 5.64709 35.8812C12.0117 40.2227 22.657 40.8196 30.3494 32.3586C22.6172 38.1347 13.5824 38.0467 7.41468 34.0278C1.75379 30.3397 0.197725 22.9782 2.96848 15.6964C1.57787 22.1887 3.81249 28.2056 8.72152 31.3429C16.3741 36.231 27.5241 33.4204 34.5505 25.5479C36.9443 22.8651 38.3182 19.2462 38.2742 15.9435C38.1988 10.4376 34.3641 5.49502 26.6173 5.49502C18.6653 5.49502 13.2033 11.6418 13.2033 16.7582C13.2033 22.4379 17.1008 25.6778 22.1858 25.6778C27.2142 25.6736 33.1075 22.5028 33.1075 15.7299Z"/>
+    </svg>
+  </div>
+  <div class="sp-name">Zain Life</div>
+  <div class="sp-tag">Plan the hours. Live the day.</div>
+  <p class="sp-tip" id="sp-tip"></p>
+</div>
+
+<header class="topbar">
+  <div class="tb-inner">
+    <button class="menu-btn" data-act="menu" aria-label="Menu" aria-expanded="false" aria-controls="drawer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="tb-text">
+      <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+      <h1 id="tb-title">Dashboard</h1>
+      <span id="tb-sub"></span>
+    </div>
+  </div>
+</header>
+
+<main id="view" aria-live="polite"></main>
+
+<div id="drawer-bg" data-act="menu-close" hidden></div>
+<nav id="drawer" aria-label="Sections" aria-hidden="true">
+  <div class="dr-head">
+    <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+    <b>Zain Life</b>
+  </div>
+  <button data-tab="dashboard" aria-label="Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></svg>
+    <span>Dashboard</span>
+  </button>
+  <button data-tab="today" aria-label="Today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span>Today</span>
+  </button>
+  <button data-tab="plan" aria-label="Plan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+    <span>Plan</span>
+  </button>
+  <button data-tab="macros" aria-label="Macros">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>
+    <span>Macros</span>
+  </button>
+  <button data-tab="health" aria-label="Health">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+    <span>Health</span>
+  </button>
+  <button data-tab="focus" aria-label="Focus">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+    <span>Focus</span>
+  </button>
+  <button data-tab="money" aria-label="Money">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10h19"/><path d="M16 15h2"/></svg>
+    <span>Money</span>
+  </button>
+  <button data-tab="life" aria-label="Life">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-1-.9C6 15.2 3 12.5 3 9.2 3 6.6 5 4.5 7.6 4.5c1.5 0 3.3.8 4.4 2.1 1.1-1.3 2.9-2.1 4.4-2.1C19 4.5 21 6.6 21 9.2c0 3.3-3 6-8 10.4z"/></svg>
+    <span>Life</span>
+  </button>
+  <div class="dr-sep"></div>
+  <button data-tab="settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+    <span>Settings</span>
+  </button>
+</nav>
+
+<div id="sheet-root"></div>
+<div id="toast" role="status" hidden></div>
+
+<script src="prayer.js"></script>
+<script src="planner.js"></script>
+<script src="foods.js"></script>
+<script src="app.js"></script>
+<script src="life.js"></script>
+<script src="money.js"></script>
+<script src="ar.js"></script>
+<script src="i18n.js"></script>
+</body>
+</html>

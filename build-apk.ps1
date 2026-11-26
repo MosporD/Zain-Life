@@ -2,14 +2,30 @@
 # Usage (PowerShell, from this folder):
 #   .\build-apk.ps1            test build, signed with this PC's debug key
 #   .\build-apk.ps1 -Release   shareable build, signed with your own release key (created on first run)
+#   -Jdk <folder>             use a specific JDK 21+ (otherwise one is found automatically)
 # Bump "version" in package.json before every APK you share, or phones will refuse to update.
-param([switch]$Release)
+param([switch]$Release, [string]$Jdk)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-# Java: use the JDK 17 that ships inside Android Studio.
-$jbr = 'C:\Program Files\Android\Android Studio\jbr'
-if (-not (Test-Path "$jbr\bin\java.exe")) { throw "Android Studio's Java was not found at $jbr" }
+# Java: Capacitor 8 needs JDK 21 or newer. Uses, in order: -Jdk <folder>, JAVA_HOME, Android Studio's
+# bundled Java, then any JDK installed under Program Files (Temurin, Microsoft, Zulu, Oracle).
+function Get-JdkMajor($dir) {
+  if (-not $dir -or -not (Test-Path "$dir\bin\java.exe")) { return 0 }
+  $rel = Join-Path $dir 'release'
+  if (Test-Path $rel) {
+    $m = Select-String -Path $rel -Pattern 'JAVA_VERSION="(\d+)' | Select-Object -First 1
+    if ($m) { return [int]$m.Matches[0].Groups[1].Value }
+  }
+  return 0
+}
+$candidates = @($Jdk, $env:JAVA_HOME, 'C:\Program Files\Android\Android Studio\jbr')
+foreach ($root in 'C:\Program Files\Eclipse Adoptium', 'C:\Program Files\Microsoft', 'C:\Program Files\Zulu', 'C:\Program Files\Java') {
+  if (Test-Path $root) { $candidates += @(Get-ChildItem $root -Directory | Sort-Object Name -Descending | ForEach-Object { $_.FullName }) }
+}
+$jbr = $candidates | Where-Object { (Get-JdkMajor $_) -ge 21 } | Select-Object -First 1
+if (-not $jbr) { throw 'No JDK 21 or newer was found. Update Android Studio, or install JDK 21 (e.g. Eclipse Temurin 21) and run again, or pass -Jdk <folder>.' }
+Write-Host "     Java: $jbr" -ForegroundColor DarkGray
 $env:JAVA_HOME = $jbr
 # Make Java trust the same root certificates Windows trusts. Needed on networks that inspect HTTPS
 # with a company certificate. Android Studio's Java can't read the Windows store directly, so we build

@@ -1,11 +1,13 @@
 {
-  "name": "reset-app",
-  "version": "1.0.0",
+  "name": "zain-life",
+  "version": "1.1.0",
   "private": true,
-  "description": "Reset: a personal lifestyle app (day planner, health, focus).",
+  "description": "Zain Life: a lifestyle planner for Zain employees (day planner, health, focus, money, faith).",
   "scripts": {
     "preview": "node dev-server.js",
-    "sync": "cap sync android"
+    "sync": "cap sync android",
+    "smoke": "node test/smoke.js",
+    "test": "node test/util.test.js && node test/planner.test.js && node test/prayer.test.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

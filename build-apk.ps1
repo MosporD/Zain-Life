@@ -1,5 +1,9 @@
 # Builds ZainLife.apk from the www/ app.
-# Usage (PowerShell):  cd C:\Users\malek.mohammad\dev\reset-app ; .\build-apk.ps1
+# Usage (PowerShell, from this folder):
+#   .\build-apk.ps1            test build, signed with this PC's debug key
+#   .\build-apk.ps1 -Release   shareable build, signed with your own release key (created on first run)
+# Bump "version" in package.json before every APK you share, or phones will refuse to update.
+param([switch]$Release)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
@@ -95,7 +99,7 @@ if ($mx -notmatch 'PlannerWidget') {
        "        </receiver>`n"
   $mx = $mx -replace '</application>', ($w + '    </application>')
 }
-# App name shown under the icon and on the widget (the app ID stays the same, so updates keep your data).
+# App name shown under the icon and on the widget.
 $mx = $mx -replace 'android:label="(Life Planner|Zainers Health)"', 'android:label="Zain Life"'
 $strings = Join-Path $PSScriptRoot 'android\app\src\main\res\values\strings.xml'
 $sx = [IO.File]::ReadAllText($strings) -replace '>(Life Planner|Zainers Health)<', '>Zain Life<'
@@ -121,16 +125,46 @@ $props = $props -replace '(?m)^distributionUrl=.*$', "distributionUrl=$url"
 $props = $props -replace '(?m)^networkTimeout=.*$', 'networkTimeout=120000'   # slow links stall >10s
 [IO.File]::WriteAllText($wp, $props)
 
-Write-Host '2/3  Building the APK (first run downloads Gradle, takes a few minutes)...' -ForegroundColor Cyan
+# Release key: one file that proves every future update comes from you. Android only installs an
+# update signed with the same key, so if this file or its password is lost, everyone has to
+# uninstall and reinstall. Keep a copy somewhere safe (not only on this PC) and never commit it.
+$keyProps = Join-Path $PSScriptRoot 'android\keystore.properties'
+if ($Release -and -not (Test-Path $keyProps)) {
+  $keyDir = Join-Path $env:USERPROFILE '.zainlife'
+  $keyFile = Join-Path $keyDir 'zainlife-release.jks'
+  New-Item -ItemType Directory -Force $keyDir | Out-Null
+  if (-not (Test-Path $keyFile)) {
+    Write-Host '     Creating your release key (one time).' -ForegroundColor Cyan
+    $sec = Read-Host 'Choose a password for the release key (at least 6 characters)' -AsSecureString
+    $pw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+    if ($pw.Length -lt 6) { throw 'The password must be at least 6 characters.' }
+    $ErrorActionPreference = 'Continue'   # keytool reports progress on stderr
+    & "$jbr\bin\keytool.exe" -genkeypair -noprompt -keystore $keyFile -alias zainlife -keyalg RSA -keysize 2048 `
+      -validity 10000 -storepass $pw -keypass $pw -dname 'CN=Zain Life'
+    $ErrorActionPreference = 'Stop'
+    if (-not (Test-Path $keyFile)) { throw 'Could not create the release key.' }
+    Write-Host "     Release key saved to $keyFile. Back it up now, with its password." -ForegroundColor Yellow
+  } else {
+    $sec = Read-Host "Password for $keyFile" -AsSecureString
+    $pw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
+  }
+  $kf = $keyFile.Replace('\', '/')
+  "storeFile=$kf`nstorePassword=$pw`nkeyAlias=zainlife`nkeyPassword=$pw`n" | Set-Content -Encoding ascii $keyProps
+}
+
+$task = if ($Release) { 'assembleRelease' } else { 'assembleDebug' }
+Write-Host "2/3  Building the APK ($task; first run downloads Gradle, takes a few minutes)..." -ForegroundColor Cyan
 Push-Location android
 $ErrorActionPreference = 'Continue'   # Java prints "Picked up JAVA_TOOL_OPTIONS" on stderr; that is not an error
-.\gradlew.bat assembleDebug --no-daemon
+.\gradlew.bat $task --no-daemon
 $code = $LASTEXITCODE
 $ErrorActionPreference = 'Stop'
 Pop-Location
 if ($code -ne 0) { throw 'Gradle build failed. Scroll up for the first error.' }
 
 Write-Host '3/3  Done.' -ForegroundColor Cyan
-Copy-Item 'android\app\build\outputs\apk\debug\app-debug.apk' 'ZainLife.apk' -Force
+$out = if ($Release) { 'android\app\build\outputs\apk\release\app-release.apk' } else { 'android\app\build\outputs\apk\debug\app-debug.apk' }
+if (-not (Test-Path $out)) { throw "Gradle finished but $out is missing. If this was -Release, check android\keystore.properties." }
+Copy-Item $out 'ZainLife.apk' -Force
 $apk = Resolve-Path 'ZainLife.apk'
 Write-Host "APK ready: $apk" -ForegroundColor Green

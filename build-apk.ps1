@@ -2,14 +2,30 @@
 # Usage (PowerShell, from this folder):
 #   .\build-apk.ps1            test build, signed with this PC's debug key
 #   .\build-apk.ps1 -Release   shareable build, signed with your own release key (created on first run)
+#   -Jdk <folder>             use a specific JDK 21+ (otherwise one is found automatically)
 # Bump "version" in package.json before every APK you share, or phones will refuse to update.
-param([switch]$Release)
+param([switch]$Release, [string]$Jdk)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
-# Java: use the JDK 17 that ships inside Android Studio.
-$jbr = 'C:\Program Files\Android\Android Studio\jbr'
-if (-not (Test-Path "$jbr\bin\java.exe")) { throw "Android Studio's Java was not found at $jbr" }
+# Java: Capacitor 8 needs JDK 21 or newer. Uses, in order: -Jdk <folder>, JAVA_HOME, Android Studio's
+# bundled Java, then any JDK installed under Program Files (Temurin, Microsoft, Zulu, Oracle).
+function Get-JdkMajor($dir) {
+  if (-not $dir -or -not (Test-Path "$dir\bin\java.exe")) { return 0 }
+  $rel = Join-Path $dir 'release'
+  if (Test-Path $rel) {
+    $m = Select-String -Path $rel -Pattern 'JAVA_VERSION="(\d+)' | Select-Object -First 1
+    if ($m) { return [int]$m.Matches[0].Groups[1].Value }
+  }
+  return 0
+}
+$candidates = @($Jdk, $env:JAVA_HOME, 'C:\Program Files\Android\Android Studio\jbr')
+foreach ($root in 'C:\Program Files\Eclipse Adoptium', 'C:\Program Files\Microsoft', 'C:\Program Files\Zulu', 'C:\Program Files\Java') {
+  if (Test-Path $root) { $candidates += @(Get-ChildItem $root -Directory | Sort-Object Name -Descending | ForEach-Object { $_.FullName }) }
+}
+$jbr = $candidates | Where-Object { (Get-JdkMajor $_) -ge 21 } | Select-Object -First 1
+if (-not $jbr) { throw 'No JDK 21 or newer was found. Update Android Studio, or install JDK 21 (e.g. Eclipse Temurin 21) and run again, or pass -Jdk <folder>.' }
+Write-Host "     Java: $jbr" -ForegroundColor DarkGray
 $env:JAVA_HOME = $jbr
 # Make Java trust the same root certificates Windows trusts. Needed on networks that inspect HTTPS
 # with a company certificate. Android Studio's Java can't read the Windows store directly, so we build
@@ -113,17 +129,19 @@ $sx = [IO.File]::ReadAllText($strings) -replace '>(Life Planner|Zainers Health)<
 Copy-Item (Join-Path $PSScriptRoot 'native\java\*') 'android\app\src\main\java' -Recurse -Force
 
 # If a copy of Gradle was placed in gradle-dist\ by hand, verify it and build from it instead of downloading.
-$localZip = Join-Path $PSScriptRoot 'gradle-dist\gradle-8.2.1-bin.zip'
-$official = '03ec176d388f2aa99defcadc3ac6adf8dd2bce5145a129659537c0874dea5ad1'   # from gradle.org
+# Capacitor 8's Android Gradle plugin (8.13) needs Gradle 8.13 or newer.
+$gradleVer = '8.14.3'
+$localZip = Join-Path $PSScriptRoot "gradle-dist\gradle-$gradleVer-bin.zip"
+$official = 'bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531'   # from services.gradle.org
 $wp = Join-Path $PSScriptRoot 'android\gradle\wrapper\gradle-wrapper.properties'
 $props = [IO.File]::ReadAllText($wp)
 if (Test-Path $localZip) {
   $sha = (Get-FileHash $localZip -Algorithm SHA256).Hash.ToLower()
-  if ($sha -ne $official) { throw "gradle-dist\gradle-8.2.1-bin.zip does not match the official checksum. Delete it and download it again from https://gradle.org/releases (version 8.2.1, binary-only)." }
-  Write-Host '     Using the verified local copy of Gradle 8.2.1.' -ForegroundColor DarkGray
+  if ($sha -ne $official) { throw "gradle-dist\gradle-$gradleVer-bin.zip does not match the official checksum. Delete it and download it again from https://gradle.org/releases (version $gradleVer, binary-only)." }
+  Write-Host "     Using the verified local copy of Gradle $gradleVer." -ForegroundColor DarkGray
   $url = 'file:///' + ($localZip -replace '\\', '/')
 } else {
-  $url = 'https\://services.gradle.org/distributions/gradle-8.2.1-bin.zip'
+  $url = "https\://services.gradle.org/distributions/gradle-$gradleVer-bin.zip"
 }
 $props = $props -replace '(?m)^distributionUrl=.*$', "distributionUrl=$url"
 $props = $props -replace '(?m)^networkTimeout=.*$', 'networkTimeout=120000'   # slow links stall >10s
@@ -157,10 +175,14 @@ if ($Release -and -not (Test-Path $keyProps)) {
 }
 
 $task = if ($Release) { 'assembleRelease' } else { 'assembleDebug' }
+# Release builds normally run a "lint vital" check first, which resolves Capacitor's unit-test libraries
+# (mockito, hamcrest...) from Maven Central. Some company networks block those .jar downloads, and none of
+# them end up in the APK, so skip that check. Run '.\gradlew lintRelease' in android\ to lint by hand.
+$skip = if ($Release) { @('-x', 'lintVitalRelease') } else { @() }
 Write-Host "2/3  Building the APK ($task; first run downloads Gradle, takes a few minutes)..." -ForegroundColor Cyan
 Push-Location android
 $ErrorActionPreference = 'Continue'   # Java prints "Picked up JAVA_TOOL_OPTIONS" on stderr; that is not an error
-.\gradlew.bat $task --no-daemon
+.\gradlew.bat $task @skip --no-daemon
 $code = $LASTEXITCODE
 $ErrorActionPreference = 'Stop'
 Pop-Location

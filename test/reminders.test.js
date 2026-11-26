@@ -51,4 +51,29 @@ assert(!build({ reportOn: false }).some(n => n.extra.type === 'report'));
 const offOnlyPrayers = build({ blocksOn: false });
 assert(offOnlyPrayers.length && offOnlyPrayers.every(n => n.channelId === 'prayers'), 'reminders off leaves prayers only');
 
+// Quiet while asleep. Normal sleeper (23:00–07:00): Fajr at 05:00 is inside sleep.
+{
+  const list = build();
+  const q = R.quietDuringSleep(list, { start, blocksFor: () => blocks, fajrWake: false });
+  assert(!q.some(n => n.extra.id === 'fajr'), 'fajr muted when fajrWake is off');
+  assert(q.some(n => n.extra.id === 'w') && q.some(n => n.id === 8000), 'work and report kept');
+  const prayersP = [{ id: 'p-fajr', title: 'Fajr prayer', start: '05:00', end: '05:15', cat: 'faith' }];
+  const withFajr = build({ prayersFor: () => prayersP });
+  const kept = R.quietDuringSleep(withFajr, { start, blocksFor: () => blocks, fajrWake: true });
+  assert(kept.some(n => n.extra.id === 'p-fajr'), 'fajr kept as a wake-up call');
+}
+// Night-shift sleeper (07:00–15:00 in the template): Dhuhr at 12:30 and a 09:00 task are muted.
+{
+  const night = [
+    { id: 'n1', title: 'Work', start: '00:00', end: '06:00', cat: 'work', remind: true },
+    { id: 'n2', title: 'Sleep', start: '07:00', end: '15:00', cat: 'sleep', remind: false },
+    { id: 'n3', title: 'Errand', start: '09:00', end: '09:30', cat: 'rest', remind: true },
+    { id: 'n4', title: 'Training', start: '16:00', end: '17:00', cat: 'health', remind: true }
+  ];
+  const dhuhr = [{ id: 'p-dhuhr', title: 'Dhuhr prayer', start: '12:30', end: '12:45', cat: 'faith' }];
+  const list = build({ blocksFor: () => night, prayersFor: () => dhuhr });
+  const q = R.quietDuringSleep(list, { start, blocksFor: () => night, fajrWake: true });
+  assert(!q.some(n => n.extra.id === 'p-dhuhr' || n.extra.id === 'n3'), 'dhuhr and the 9 am task are muted');
+  assert(q.some(n => n.extra.id === 'n4') && q.some(n => n.extra.id === 'n1'), 'waking-hours reminders kept');
+}
 console.log('ALL REMINDER TESTS PASSED');

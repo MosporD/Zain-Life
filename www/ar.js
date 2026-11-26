@@ -436,6 +436,8 @@ window.AR_DICT = {
   'Time added': 'تمت إضافة الوقت', 'Timer started': 'بدأ المؤقت', 'Meeting now': 'اجتماع الآن',
   'Next meeting': 'الاجتماع التالي', 'Work logged': 'عمل مسجّل', 'Tasks done': 'مهام منجزة',
   'Due date': 'تاريخ الاستحقاق',
+  'Quiet while I sleep': 'هدوء أثناء نومي', 'No reminders during your Sleep block, including night-shift sleep': 'لا تذكيرات أثناء فترة نومك، بما فيها النوم بعد المناوبة الليلية',
+  'Wake me for Fajr': 'أيقظني للفجر', 'Fajr still rings when “Quiet while I sleep” is on': 'يبقى تنبيه الفجر حتى مع تفعيل «هدوء أثناء نومي»',
   'Background': 'الخلفية', 'Animated': 'متحركة', 'Static': 'ثابتة',
   'General': 'عام', 'Weight and steps': 'الوزن والخطوات', 'Social media': 'وسائل التواصل',
   'Scrolling alerts are in the Focus tab.': 'تنبيهات التمرير موجودة في تبويب التركيز.',

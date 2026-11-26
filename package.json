@@ -10,11 +10,11 @@
     "test": "node test/util.test.js && node test/reminders.test.js && node test/planner.test.js && node test/prayer.test.js"
   },
   "dependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/core": "^6.2.0",
-    "@capacitor/local-notifications": "^6.1.0"
+    "@capacitor/android": "^8.3.6",
+    "@capacitor/core": "^8.3.6",
+    "@capacitor/local-notifications": "^8.3.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.0"
+    "@capacitor/cli": "^8.6.3"
   }
 }

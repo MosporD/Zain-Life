@@ -1385,6 +1385,8 @@
       '<span class="switch"><input type="checkbox" id="set-reminders"' + (st.reminders ? ' checked' : '') + (native ? '' : ' disabled') + '><span></span></span></label>' +
       '<label class="setrow"><span><span class="st">Nightly report</span><br><span class="sd">15 minutes before you sleep</span></span>' +
       '<span class="switch"><input type="checkbox" id="set-report"' + (st.reportReminder ? ' checked' : '') + '><span></span></span></label>' +
+      '<label class="setrow"><span><span class="st">Quiet while I sleep</span><br><span class="sd">No reminders during your Sleep block, including night-shift sleep</span></span>' +
+        '<span class="switch"><input type="checkbox" id="set-quiet"' + (st.quietSleep !== false ? ' checked' : '') + '><span></span></span></label>' +
       (native ? '<div class="setrow"><span><span class="st">Test it</span><br><span class="sd">Pops up in 5 seconds. Lock the phone or switch apps to see it.</span></span>' +
         '<button class="btn ghost" data-act="test-reminder">Send test</button></div>' : '') +
       '</div></section>' +
@@ -1397,6 +1399,8 @@
     else if (setGroup === 'prayer') body = '<section><h2>Prayer</h2><div class="card">' +
       ('<label class="setrow"><span><span class="st">Prayer reminders</span><br><span class="sd">At each prayer time</span></span>' +
         '<span class="switch"><input type="checkbox" id="set-prayer"' + (st.prayerReminders ? ' checked' : '') + '><span></span></span></label>' +
+        '<label class="setrow"><span><span class="st">Wake me for Fajr</span><br><span class="sd">Fajr still rings when “Quiet while I sleep” is on</span></span>' +
+        '<span class="switch"><input type="checkbox" id="set-fajr"' + (st.fajrWake !== false ? ' checked' : '') + '><span></span></span></label>' +
         '<label class="setrow"><span class="st">City for prayer times</span><select data-set="city" style="width:150px">' + cityOpts + '</select></label>') + '</div></section>' + runHooks('settings', 'prayer');
     else if (setGroup === 'health') body = '<section><h2>Weight and steps</h2><div class="card">' +
       '<label class="setrow"><span class="st">Starting weight (kg)</span><input type="number" step="0.1" data-set="start" value="' + esc(st.start == null ? '' : st.start) + '"></label>' +
@@ -1529,6 +1533,7 @@
       var list = window.ZLReminders.build({ start: t, now: now, blocksOn: blocksOn, prayOn: prayOn, reportOn: state.settings.reportReminder,
         cats: CATS, blocksFor: planList, prayersFor: prayerBlocks, reportMinuteFor: reportTimeFor });
       runHooks('notifs', list, t, now, blocksOn);
+      if (state.settings.quietSleep !== false) list = window.ZLReminders.quietDuringSleep(list, { start: t, blocksFor: planList, fajrWake: state.settings.fajrWake !== false });
       return list.length ? ln.schedule({ notifications: list }) : null;
     }).catch(function (e) { console.warn('reminders', e); });
   }
@@ -1797,6 +1802,11 @@
         save(); configureWatch();
         toast(wantAlerts ? 'Scrolling alerts on' : 'Scrolling alerts off');
       });
+      return;
+    }
+    if (t.id === 'set-quiet' || t.id === 'set-fajr') {
+      state.settings[t.id === 'set-quiet' ? 'quietSleep' : 'fajrWake'] = t.checked;
+      save(); reschedule(); toast('Saved');
       return;
     }
     if (t.id === 'set-reminders' || t.id === 'set-prayer' || t.id === 'set-report') {

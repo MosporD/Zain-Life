@@ -59,7 +59,37 @@
     return list;
   }
 
-  var api = { reportMinute: reportMinute, build: build };
+  // Quiet while asleep: drops any notification that would go off inside a "Sleep" block, so a night-shift
+  // worker sleeping 7 am – 3 pm isn't woken for Dhuhr or a task. Fajr can stay on as a wake-up call, and
+  // the daily report is never inside sleep (it's set before it). Works on the whole list, so reminders
+  // added by life.js are covered too.
+  // o: { start (Date, midnight today), blocksFor(date), fajrWake (bool) }
+  function sleepWindows(o) {
+    var out = [];
+    for (var off = -1; off < 8; off++) {
+      var d = addDays(o.start, off);
+      o.blocksFor(d).forEach(function (b) {
+        if (b.cat !== 'sleep' || !/^Sleep/.test(b.title)) return;
+        var s = toMin(b.start), e = toMin(b.end);
+        if (e === 1439) e = 1440;                 // "until 11:59 pm" means until midnight
+        if (e <= s) e += 1440;                    // runs past midnight
+        var base = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        out.push([base + s * 60000, base + e * 60000]);
+      });
+    }
+    return out;
+  }
+  function quietDuringSleep(list, o) {
+    var win = sleepWindows(o);
+    return list.filter(function (n) {
+      var x = n.extra || {}, at = n.schedule && n.schedule.at ? new Date(n.schedule.at).getTime() : null;
+      if (at == null || x.type === 'report') return true;
+      if (o.fajrWake && x.id === 'p-fajr') return true;
+      return !win.some(function (w) { return at >= w[0] && at < w[1]; });
+    });
+  }
+
+  var api = { reportMinute: reportMinute, build: build, sleepWindows: sleepWindows, quietDuringSleep: quietDuringSleep };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ZLReminders = api;
 })(this);

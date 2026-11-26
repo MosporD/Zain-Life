@@ -26,8 +26,17 @@
 
   var CAREER_FOCUS = {
     courses: 'Courses & certifications', projects: 'Building projects', network: 'Networking',
-    jobs: 'Job applications', reading: 'Reading & research'
+    mentoring: 'Mentoring & leadership', reading: 'Reading & research'
   };
+  // Goals beyond weight, career, skill and prayer. Each gets one block per day or a few hours a week.
+  var EXTRA_GOALS = {
+    money: { label: 'Money check-in', cat: 'growth' },
+    mind: { label: 'Mind', cat: 'rest' },
+    social: { label: 'Family & friends', cat: 'family' },
+    reading: { label: 'Reading', cat: 'growth' },
+    other: { label: 'My goal', cat: 'growth' }
+  };
+  var MIND_HOW = { meditate: 'Meditation & breathing', journal: 'Journaling', nature: 'A walk in nature', talk: 'Talking to someone I trust' };
   var TRAIN_PATTERN = { 2: [0, 3], 3: [0, 2, 4], 4: [0, 1, 3, 5], 5: [0, 1, 2, 3, 5] };
   var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -98,13 +107,20 @@
   // Put a goal block (req.min minutes) into the first run of free slots that matches the preferred
   // time of day. Returns the minutes actually placed.
   function place(slots, req) {
-    var minStart;
+    var minStart, maxStart;
     var workEnd = lastWorkEnd(slots);
-    if (req.pref === 'morning') minStart = -1;
-    else if (req.pref === 'evening') minStart = 19 * 60;
-    else if (req.pref === 'afterwork') minStart = workEnd > 0 ? workEnd : 16 * 60;
-    else minStart = 9 * 60;
-    var maxStart = req.pref === 'morning' ? 12 * 60 : Infinity;
+    var need = Math.ceil(req.min / 15);
+    if (req.win) {
+      // An hour range the person chose: the block must start and end inside it.
+      minStart = req.win[0] * 60;
+      maxStart = req.win[1] * 60 - need * 15 + 1;
+    } else {
+      if (req.pref === 'morning') minStart = -1;
+      else if (req.pref === 'evening') minStart = 19 * 60;
+      else if (req.pref === 'afterwork') minStart = workEnd > 0 ? workEnd : 16 * 60;
+      else minStart = 9 * 60;
+      maxStart = req.pref === 'morning' ? 12 * 60 : Infinity;
+    }
 
     function find(need, lo, hi) {
       for (var i = 0; i + need <= slots.length; i++) {
@@ -118,11 +134,11 @@
       }
       return -1;
     }
-    var need = Math.ceil(req.min / 15);
     var i = find(need, minStart, maxStart);
     if (i < 0) i = find(need, 0, Infinity);           // anywhere free
     if (i < 0 && need > 2) {                          // no room for all of it: try half (at least 30 min)
       need = Math.max(2, Math.ceil(need / 2));
+      if (req.win) maxStart = req.win[1] * 60 - need * 15 + 1;
       i = find(need, minStart, maxStart);
       if (i < 0) i = find(need, 0, Infinity);
     }
@@ -215,6 +231,12 @@
 
   /* Builds 7 templates (0 = Sunday) from the profile's ideal days and goals.
      Returns { templates, notes: [strings], shortfalls: [strings] } */
+  // The hour range a question asked for ({from: 17, to: 20}), or null for older profiles that picked "Mornings" and so on.
+  function windowOf(Q) {
+    if (!Q || Q.from == null || Q.from === '' || Q.to == null || Q.to === '') return null;
+    var a = +Q.from, b = +Q.to;
+    return b > a ? [a, b] : null;
+  }
   function buildTemplates(P, limit) {
     limit = limit || 30;
     var workDays = P.workDays || [];
@@ -227,18 +249,18 @@
       var W = P.weightQ, T = Math.max(2, Math.min(5, +W.days || 3));
       var trainDays = TRAIN_PATTERN[T].map(function (o) { return (weekStart + o) % 7; });
       trainDays.forEach(function (d) {
-        reqs[d].push({ label: 'Training', cat: 'health', min: 60, pref: W.time || 'afterwork', pri: 1 });
+        reqs[d].push({ label: 'Training', cat: 'health', min: 60, pref: W.time || 'afterwork', win: windowOf(W), pri: 1 });
       });
       if (W.direction === 'lose') {
         [0, 1, 2, 3, 4, 5, 6].forEach(function (d) {
-          if (trainDays.indexOf(d) < 0) reqs[d].push({ label: 'Walk or bike · 30–40 min', cat: 'health', min: 30, pref: 'afterwork', pri: 5 });
+          if (trainDays.indexOf(d) < 0) reqs[d].push({ label: 'Walk or bike · 30–40 min', cat: 'health', min: 30, pref: 'afterwork', win: windowOf(W), pri: 5 });
         });
       }
-      notes.push('Training ' + T + '× a week: ' + trainDays.map(function (d) { return DAY_NAMES[d].slice(0, 3); }).join(', ') + '.' +
-        (W.limits ? ' Keep in mind: ' + W.limits + '.' : ''));
+      notes.push('Training ' + T + '× a week: ' + trainDays.map(function (d) { return DAY_NAMES[d].slice(0, 3); }).join(', ') + '.');
     }
 
-    function spread(hours, label, cat, pref, pri) {
+    // pref: 'weekend' puts the hours on days off first. win: the hour range to place them in.
+    function spread(hours, label, cat, pref, pri, win) {
       var left = Math.max(0, Math.round(+hours || 0));
       var weekendFirst = pref === 'weekend';
       var timePref = weekendFirst ? 'any' : pref;
@@ -246,14 +268,14 @@
         weekend.forEach(function (d) {
           if (left <= 0) return;
           var h = Math.min(2, left);
-          reqs[d].push({ label: label, cat: cat, min: h * 60, pref: 'any', pri: pri });
+          reqs[d].push({ label: label, cat: cat, min: h * 60, pref: 'any', win: win || null, pri: pri });
           left -= h;
         });
       }
       function onWorkdays() {
         (workDays.length ? workDays : [0, 1, 2, 3, 4, 5, 6]).forEach(function (d) {
           if (left <= 0) return;
-          reqs[d].push({ label: label, cat: cat, min: 60, pref: timePref, pri: pri });
+          reqs[d].push({ label: label, cat: cat, min: 60, pref: timePref, win: win || null, pri: pri });
           left -= 1;
         });
       }
@@ -261,13 +283,39 @@
     }
     if (goals.indexOf('career') >= 0 && P.careerQ) {
       var C = P.careerQ;
-      spread(C.hours, 'Career · ' + (CAREER_FOCUS[C.focus] || 'growth'), 'growth', C.time || 'evening', 3);
-      notes.push('Career: ' + C.hours + ' h a week on ' + (CAREER_FOCUS[C.focus] || 'growth').toLowerCase() + '.');
+      var cWhat = C.focus === 'other' ? (String(C.focusOther || '').trim() || 'growth') : (CAREER_FOCUS[C.focus] || 'growth');
+      spread(C.hours, 'Career · ' + cWhat, 'growth', C.where || C.time || 'evening', 3, windowOf(C));
+      notes.push('Career: ' + C.hours + ' h a week on ' + cWhat.toLowerCase() + '.');
     }
     if (goals.indexOf('skill') >= 0 && P.skillQ && P.skillQ.skill) {
       var S = P.skillQ;
-      spread(S.hours, 'Practice · ' + S.skill, 'growth', S.time || 'evening', 4);
+      spread(S.hours, 'Practice · ' + S.skill, 'growth', S.where || S.time || 'evening', 4, windowOf(S));
       notes.push('Learning ' + S.skill + ': ' + S.hours + ' h a week.');
+    }
+    if (goals.indexOf('money') >= 0 && P.moneyQ) {
+      var M = P.moneyQ;
+      spread(M.hours || 1, EXTRA_GOALS.money.label, 'growth', M.where || 'any', 5, windowOf(M));
+      notes.push('Money: ' + (M.hours || 1) + ' h a week to review spending and savings' + (+M.monthly > 0 ? ', aiming to save ' + (+M.monthly) + ' a month.' : '.'));
+    }
+    if (goals.indexOf('mind') >= 0 && P.mindQ) {
+      var N = P.mindQ, nWhat = N.how === 'other' ? (String(N.howOther || '').trim() || 'Mind') : (MIND_HOW[N.how] || 'Mind'), nMin = Math.ceil((+N.mins || 15) / 15) * 15;
+      for (var dm = 0; dm < 7; dm++) reqs[dm].push({ label: nWhat + ' · ' + (+N.mins || 15) + ' min', cat: 'rest', min: nMin, pref: 'evening', win: windowOf(N), pri: 2 });
+      notes.push('Mind: ' + (+N.mins || 15) + ' min a day of ' + nWhat.toLowerCase() + '.');
+    }
+    if (goals.indexOf('social') >= 0 && P.socialQ) {
+      var Sc = P.socialQ, who = Sc.who === 'friends' ? 'Friends' : Sc.who === 'family' ? 'Family time' : 'Family & friends';
+      spread(Sc.hours || 3, who, Sc.who === 'friends' ? 'social' : 'family', Sc.where || 'weekend', 4, windowOf(Sc));
+      notes.push(who + ': ' + (Sc.hours || 3) + ' h a week.');
+    }
+    if (goals.indexOf('reading') >= 0 && P.readQ) {
+      var R = P.readQ, rMin = Math.ceil((+R.mins || 20) / 15) * 15;
+      for (var dr = 0; dr < 7; dr++) reqs[dr].push({ label: 'Reading · ' + (+R.mins || 20) + ' min', cat: 'growth', min: rMin, pref: 'evening', win: windowOf(R), pri: 3 });
+      notes.push('Reading: ' + (+R.mins || 20) + ' min a day.');
+    }
+    if (goals.indexOf('other') >= 0 && P.otherQ && String(P.otherQ.name || '').trim()) {
+      var O = P.otherQ, oName = String(O.name).trim();
+      spread(O.hours || 2, oName, 'growth', O.where || 'any', 5, windowOf(O));
+      notes.push(oName + ': ' + (O.hours || 2) + ' h a week.');
     }
     if (goals.indexOf('pray') >= 0 && P.prayQ && P.religion === 'christian') {
       // Christian: daily prayer & Bible reading, and Sunday church in the morning.
@@ -329,7 +377,7 @@
     return { kcal: kcal, p: p, c: c, f: f, bmr: Math.round(bmr), tdee: Math.round(tdee), direction: dir };
   }
 
-  var api = { ACTIVITIES: ACTIVITIES, activity: activity, classify: classify, CAREER_FOCUS: CAREER_FOCUS, buildTemplates: buildTemplates, macroTargets: macroTargets };
+  var api = { ACTIVITIES: ACTIVITIES, activity: activity, classify: classify, CAREER_FOCUS: CAREER_FOCUS, EXTRA_GOALS: EXTRA_GOALS, MIND_HOW: MIND_HOW, buildTemplates: buildTemplates, macroTargets: macroTargets };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Planner = api;
 })(this);

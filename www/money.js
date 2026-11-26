@@ -116,7 +116,7 @@
       '<p class="flabel" style="margin-top:14px">Category</p><div class="choice">' + list.map(function (c) {
         return '<button type="button" class="chip' + (addCtx.cat === c[0] ? ' on' : '') + '" data-act="mo-cat" data-v="' + c[0] + '">' + esc(c[1]) + '</button>';
       }).join('') + '</div>' +
-      '<label class="field"><span>Note (optional)</span><input id="mo-note" maxlength="60" value="' + esc(addCtx.note || '') + '" placeholder="e.g. Fuel, lunch with friends"></label>' +
+      '<label class="field"><span>Note (optional)</span><input id="mo-note" maxlength="60" value="' + esc(addCtx.note || '') + '"></label>' +
       '<label class="field"><span>Date</span><input type="date" id="mo-date" value="' + esc(addCtx.date) + '"></label>' +
       '<div class="row-btns"><button class="btn" data-act="mo-save">Save</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');
   }
@@ -150,7 +150,7 @@
 
   /* ---------------- bills ---------------- */
   A['mo-bill-new'] = function () {
-    L.openSheet('<h3>Add a monthly bill</h3><label class="field"><span>Name</span><input id="mb-name" maxlength="40" placeholder="e.g. Internet"></label>' +
+    L.openSheet('<h3>Add a monthly bill</h3><label class="field"><span>Name</span><input id="mb-name" maxlength="40"></label>' +
       '<label class="field"><span>Amount each month (' + esc(cur()) + ')</span><input type="number" id="mb-amt" inputmode="decimal" min="0" step="0.01"></label>' +
       '<label class="field"><span>Category</span><select id="mb-cat">' + CATS.map(function (c) { return '<option value="' + c[0] + '"' + (c[0] === 'bills' ? ' selected' : '') + '>' + esc(c[1]) + '</option>'; }).join('') + '</select></label>' +
       '<div class="row-btns"><button class="btn" data-act="mo-bill-save">Add bill</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');
@@ -274,7 +274,7 @@
     if (P.cash == null) P.cash = 0;
     if (P.save == null) P.save = defaultSave();
     L.openSheet('<h3>' + (d.isNew ? 'Add a debt' : esc(d.name)) + '</h3>' +
-      '<label class="field"><span>Name</span><input id="db-name" maxlength="40" value="' + esc(d.name || '') + '" placeholder="e.g. Car loan"></label>' +
+      '<label class="field"><span>Name</span><input id="db-name" maxlength="40" value="' + esc(d.name || '') + '"></label>' +
       '<p class="flabel" style="margin-top:14px">Type</p><div class="choice">' +
       '<button type="button" class="chip' + (fixed ? ' on' : '') + '" data-act="db-type" data-v="fixed">Fixed total<small>Murabaha, car, appliances</small></button>' +
       '<button type="button" class="chip' + (!fixed ? ' on' : '') + '" data-act="db-type" data-v="interest">Interest on balance<small>Personal loan, mortgage, card</small></button></div>' +

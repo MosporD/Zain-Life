@@ -5,8 +5,8 @@
   var L = window.LP;
   if (!L) return;
   var esc = L.esc, A = L.ACTIONS, toast = L.toast;
-  var FIELDS = [['title', 'Job title', 'e.g. RAN Optimization Engineer'], ['dept', 'Department', 'e.g. Technology'],
-    ['location', 'Work location', 'e.g. Amman HQ'], ['phone', 'Work phone or extension', '']];
+  var FIELDS = [['title', 'Job title', ''], ['dept', 'Department', ''],
+    ['location', 'Work location', ''], ['phone', 'Work phone or extension', '']];
 
   function P() { return L.st().profile || null; }
   function about() { var p = P(); if (!p) return {}; p.about = p.about || {}; return p.about; }

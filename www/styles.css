@@ -701,3 +701,36 @@ main { padding-bottom: calc(120px + var(--safe-area-inset-bottom, env(safe-area-
 #tabbar button.on { color: var(--accent); box-shadow: var(--neu-in); }
 #tabbar .tb-gap { height: 52px; }
 .fab { outline: 7px solid var(--bg); }
+
+/* ---------- Today: now, fading plan cards, nutrition, mood ---------- */
+.tsec { margin-top: 26px; }
+.now-mood { display: grid; gap: 10px; }
+.faces { display: flex; gap: 10px; justify-content: space-between; }
+.face { flex: 1 1 0; max-width: 58px; aspect-ratio: 1; border: 0; border-radius: 50%; font-size: 1.5rem; line-height: 1; display: grid; place-items: center;
+  background: var(--bg); box-shadow: var(--neu-sm); transition: box-shadow .18s ease, transform .12s ease; }
+.face.on { box-shadow: var(--neu-in), 0 0 0 2px var(--accent); }
+.face:active { transform: scale(.94); box-shadow: var(--neu-in); }
+.job-nowline { display: block; width: 100%; text-align: start; background: none; border: 0; border-top: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 0; color: var(--fg); font: inherit; font-size: .88rem; }
+.job-nowline span { margin-inline-end: 0; }
+.fade-list { gap: 12px; }
+.tl.fc, .tl.fc.past:not(.done) { opacity: var(--f, 1); transition: opacity .5s ease, transform .5s ease, box-shadow .18s ease; }
+.tl.fc:not(.in), .tl.fc.past:not(.done):not(.in) { opacity: 0; transform: translateY(14px); }
+.tl.fc:active { opacity: 1; }
+.tl-mood { font-size: 1.1rem; line-height: 1; }
+@media (prefers-reduced-motion: reduce) { .tl.fc, .tl.fc:not(.in) { transition: none; transform: none; } }
+.nut-water { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.mood-list, .mood-days { list-style: none; margin: 12px 0 0; padding: 0; }
+.mood-list li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+.mood-list .mf { font-size: 1.3rem; }
+.mood-list .mt { font-weight: 600; overflow-wrap: anywhere; }
+.mood-days li { display: grid; grid-template-columns: minmax(0, 1fr) 30px auto 34px; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); }
+.mood-days li:first-child { border-top: 0; }
+.md-day { font-weight: 600; font-size: .9rem; }
+.md-face { font-size: 1.3rem; }
+.md-dots { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 120px; }
+.md-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.md-dots i.v1 { background: var(--warn); } .md-dots i.v2 { background: #e0a030; } .md-dots i.v3 { background: var(--muted); }
+.md-dots i.v4 { background: var(--accent-2); } .md-dots i.v5 { background: var(--accent); }
+.tsel { display: flex; gap: 8px; }
+.tsel select { flex: 1 1 0; min-width: 0; }
+.tsel select[data-tsel=m] { flex: 0 0 4.6em; }

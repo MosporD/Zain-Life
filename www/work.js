@@ -224,7 +224,7 @@
   }
   function openTimerSheet() {
     L.openSheet('<h3>Start timer</h3><label class="field"><span>Project</span><select id="job-t-proj">' + projectOptions(lastProject) + '</select></label>' +
-      '<label class="field"><span>What are you working on? (optional)</span><input type="text" id="job-t-note" maxlength="80" placeholder="e.g. Weekly KPI report"></label>' +
+      '<label class="field"><span>What are you working on? (optional)</span><input type="text" id="job-t-note" maxlength="80"></label>' +
       '<div class="row-btns"><button class="btn" data-act="job-timer-start">Start</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');
   }
   A['job-timer-open'] = openTimerSheet;
@@ -295,8 +295,8 @@
   function hoursText(h) { return fmt12(L.minToT(h.start % 1440)) + ' – ' + fmt12(L.minToT(h.end % 1440)) + (h.end > 1440 ? ' (overnight)' : ''); }
   function hoursForm(h, inSheet) {
     return '<div class="job-hrs" data-sheet="' + (inSheet ? 1 : 0) + '"><div class="two">' +
-      '<label class="field"><span>Starts</span><input type="time" step="900" class="job-hrs-s" value="' + L.minToT(h.start) + '"></label>' +
-      '<label class="field"><span>Ends</span><input type="time" step="900" class="job-hrs-e" value="' + L.minToT(h.end % 1440) + '"></label></div>' +
+      '<label class="field"><span>Starts</span>' + L.timeSelect('class="job-hrs-s"', L.minToT(h.start)) + '</label>' +
+      '<label class="field"><span>Ends</span>' + L.timeSelect('class="job-hrs-e"', L.minToT(h.end % 1440)) + '</label></div>' +
       '<p class="flabel" style="margin-top:14px">Work days</p><div class="choice">' + L.DAYS.map(function (n, i) {
         var on = h.days.indexOf(i) >= 0;
         return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-act="job-hrs-day" data-v="' + i + '" aria-pressed="' + on + '">' + n + '</button>';
@@ -349,15 +349,15 @@
   function renderWork() { W(); return setupCard() + headerCard() + meetingsSection() + tasksSection() + timeSection(); }
   L.TABS.work = ['Work', renderWork];
 
-  // Today tab: a one-line reminder of the next meeting, when calendar access is on.
-  H.todayTop.push(function () {
+  // Inside the Now card: a line for the next meeting, when calendar access is on.
+  H.nowExtra.push(function () {
     if (!cal.granted || !cal.events) return '';
     var now = Date.now(), k = todayKey();
     var next = meetingsFor(k).filter(function (e) { return !e.allDay && e.end > now; })[0];
     if (!next) return '';
     var live = next.begin <= now;
-    return '<button class="card dcard job-next" data-act="job-go"><span class="lbl">' + (live ? 'Meeting now' : 'Next meeting') + '</span>' + (next.title ? '<b class="notr">' + esc(next.title) + '</b>' : '<b>(No title)</b>') +
-      '<span class="muted small">' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</span></button>';
+    return '<button class="nextline job-nowline" data-act="job-go"><b>' + (live ? 'Meeting now' : 'Meeting') + '</b>' + (next.title ? '<span class="notr">' + esc(next.title) + '</span>' : '(No title)') +
+      ' · ' + esc(fmt12(hm(next.begin)) + ' – ' + fmt12(hm(next.end))) + '</button>';
   });
   // Centre button: next meeting and the tasks to do first (overdue, due today, then the rest).
   H.quick.push(function () {

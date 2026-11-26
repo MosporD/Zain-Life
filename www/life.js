@@ -73,27 +73,7 @@
       : '';
     return '<section><div class="card steps-dash" data-tab="health" role="button"><div class="ring-row">' + stepRing(steps, goal) + side + '</div></div>' + note + '</section>';
   });
-  H.today.push(function (k, rec) {
-    var n = rec.water || 0, g = waterGoal(), dots = '';
-    for (var i = 0; i < g; i++) dots += '<span class="gl' + (i < n ? ' on' : '') + '"></span>';
-    var water = sec('Water', '<div class="card"><div class="kcal"><span class="big">' + n + '</span><span class="of">of ' + g + ' glasses · ' + num1(n * 0.25) + ' L</span></div>' +
-      '<div class="glasses" aria-hidden="true">' + dots + '</div>' +
-      '<div class="row-btns"><button class="btn" data-act="w-add">+1 glass</button><button class="btn ghost" data-act="w-sub" aria-label="Remove a glass">−1</button></div></div>');
-    var md = rec.mood || {};
-    function scale(key, cur) {
-      return '<div class="choice scale">' + [1, 2, 3, 4, 5].map(function (v) {
-        return '<button type="button" class="chip' + (cur === v ? ' on' : '') + '" data-act="mood" data-k="' + key + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + v + '<small>' + (key === 'm' ? MOODS[v - 1] : ['Drained', 'Low', 'Okay', 'Good', 'High'][v - 1]) + '</small></button>';
-      }).join('') + '</div>';
-    }
-    var mood = sec('How are you?', '<div class="card"><p class="flabel">Mood</p>' + scale('m', md.m) + '<p class="flabel" style="margin-top:12px">Energy</p>' + scale('e', md.e) +
-      '</div>');
-    var due = overduePeople().slice(0, 2);
-    var people = due.length ? sec('Stay in touch', '<div class="card"><ul class="loglist">' + due.map(function (p) {
-      return '<li><span class="ln"><b>' + esc(p.name) + '</b><span class="muted small">' + (p.last ? daysAgo(p.last) + ' days since you talked' : 'Not logged yet') + '</span></span>' +
-        '<button class="btn ghost" data-act="p-talk" data-id="' + p.id + '">Talked today</button></li>';
-    }).join('') + '</ul></div>') : '';
-    return water + mood;
-  });
+  L.waterGoal = waterGoal;      // the Today tab draws the water card
   H.dashTiles.push(function (k, rec) {
     var n = rec.water || 0, g = waterGoal();
     return L.dashTile('Water', n + '/' + g, n >= g ? 'goal reached' : '', 'today');
@@ -114,12 +94,6 @@
     if (r.water === waterGoal()) toast('Water goal reached');
   };
   A['w-sub'] = function () { var r = L.dayRec(todayKey()); r.water = Math.max(0, (r.water || 0) - 1); if (r.water < 8) r.habits.water = false; L.save(); L.render(); };
-  A.mood = function (el) {
-    var r = L.dayRec(todayKey()), k = el.getAttribute('data-k');
-    r.mood = r.mood || {};
-    r.mood[k] = +el.getAttribute('data-v');
-    L.save(); L.render();
-  };
 
   /* =====================================================================
      FOCUS TIMER
@@ -161,7 +135,7 @@
     return '<button class="tl-move" data-act="ft-open" data-title="' + esc(b.title) + '">Focus</button>';
   });
   function openTimerSheet(title) {
-    L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '" placeholder="e.g. Course, side project, Quran"></label>' +
+    L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '"></label>' +
       '<p class="flabel" style="margin-top:14px">How long?</p><div class="choice">' + [25, 45, 60, 90].map(function (m) {
         return '<button type="button" class="chip" data-act="ft-start" data-v="' + m + '">' + m + ' min</button>';
       }).join('') + '</div><p class="muted small" style="margin-top:10px">You’ll get a notification when it ends. The minutes go into your daily report and weekly review.</p>');
@@ -553,7 +527,7 @@
       '<div class="row-btns"><button class="btn" data-act="sv-new">New goal</button></div>');
   }
   A['sv-new'] = function () {
-    L.openSheet('<h3>New savings goal</h3><label class="field"><span>Name</span><input id="sv-name" placeholder="e.g. Apartment down payment"></label>' +
+    L.openSheet('<h3>New savings goal</h3><label class="field"><span>Name</span><input id="sv-name"></label>' +
       '<label class="field"><span>Target (' + esc(F().savings.cur) + ')</span><input type="number" id="sv-target" inputmode="numeric" min="1"></label>' +
       '<label class="field"><span>Already saved</span><input type="number" id="sv-saved" inputmode="numeric" min="0" value="0"></label>' +
       '<div class="row-btns"><button class="btn" data-act="sv-create">Add goal</button><button class="btn ghost" data-act="close-sheet">Cancel</button></div>');

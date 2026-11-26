@@ -34,10 +34,15 @@
   ];
   var PRAYERS = [['fajr', 'Fajr'], ['dhuhr', 'Dhuhr'], ['asr', 'Asr'], ['maghrib', 'Maghrib'], ['isha', 'Isha']];
   var GOALS = {
-    career: { t: 'Career growth', d: 'A promotion, a new job or your own business', icon: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>' },
+    career: { t: 'Career growth', d: 'A promotion, a bigger role or becoming the expert in your field', icon: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>' },
     weight: { t: 'Weight', d: 'Lose fat, gain weight or build muscle', icon: '<path d="M6 7h12l2 13H4z"/><circle cx="12" cy="5" r="2"/><path d="M12 11v3"/>' },
     skill: { t: 'Learn a new skill', d: 'A language, an instrument, coding, anything', icon: '<path d="M2 7l10-4 10 4-10 4z"/><path d="M6 9v5c3 2 9 2 12 0V9"/>' },
-    pray: { t: 'Pray more', d: 'All five prayers on time, plus Quran', icon: '<path d="M12 3a6 6 0 0 0 0 12 7 7 0 0 1 0-12z"/><path d="M5 21h14M7 21v-4h10v4"/>' }
+    pray: { t: 'Pray more', d: 'All five prayers on time, plus Quran', icon: '<path d="M12 3a6 6 0 0 0 0 12 7 7 0 0 1 0-12z"/><path d="M5 21h14M7 21v-4h10v4"/>' },
+    money: { t: 'Save more money', d: 'A monthly saving target and a weekly money check-in', icon: '<rect x="2.5" y="6" width="19" height="13" rx="2.5"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 9.5h.01M18 15.5h.01"/>' },
+    mind: { t: 'Look after my mind', d: 'A daily calm moment: meditation, journaling or a quiet walk', icon: '<path d="M12 20.5c-5-3.6-8-6.4-8-10a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8c0 3.6-3 6.4-8 10z"/>' },
+    social: { t: 'Family and friends', d: 'Protected time for the people who matter', icon: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M15.5 14.8c3 0 5.5 1.6 5.5 4.7"/>' },
+    reading: { t: 'Read more', d: 'A few pages every day', icon: '<path d="M4 5.5C6.5 4.5 9.5 4.5 12 6c2.5-1.5 5.5-1.5 8-.5V19c-2.5-1-5.5-1-8 .5-2.5-1.5-5.5-1.5-8-.5z"/><path d="M12 6v13.5"/>' },
+    other: { t: 'Something else', d: 'Name your own goal and give it time every week', icon: '<path d="M12 5v14M5 12h14"/>' }
   };
   // A short lifestyle tip on the welcome screen, different each time the app opens.
   var TIPS = [
@@ -113,7 +118,7 @@
   }
   var state = load();
   // Extension points used by life.js (workouts, Ramadan, savings, widget...).
-  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [] };
+  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [], nowExtra: [], reportExtra: [] };
   function runHooks(name) { var a = [].slice.call(arguments, 1), out = ''; HOOKS[name].forEach(function (f) { try { var r = f.apply(null, a); if (typeof r === 'string') out += r; } catch (e) { console.warn(name, e); } }); return out; }
   var saveFailed = false;
   function save() {
@@ -196,7 +201,7 @@
   }
 
   var TABS = {
-    dashboard: ['Dashboard', renderDashboard], today: ['Today', renderToday], plan: ['Plan', renderPlan], macros: ['Macros', renderMacros],
+    dashboard: ['Dashboard', renderDashboard], today: ['Today', function () { return ''; }], plan: ['Plan', renderPlan], macros: ['Macros', renderMacros],
     health: ['Health', renderHealth], focus: ['Focus', renderFocus], settings: ['Settings', renderSettings],
     report: ['Daily report', renderReport]
   };
@@ -239,9 +244,14 @@
         curWeekend: { wake: 9, sleep: 24, cells: {} },
         idealWork: null, idealWeekend: null
       },
-      weightQ: { direction: 'lose', goal: '', pace: 'steady', activity: 'desk', days: 3, time: 'afterwork', limits: '' },
-      careerQ: { field: '', aim: 'promotion', focus: 'courses', hours: 5, time: 'evening' },
-      skillQ: { skill: '', level: 'beginner', hours: 4, time: 'evening' },
+      weightQ: { direction: 'lose', goal: '', pace: 'steady', activity: 'desk', days: 3, from: 17, to: 20 },
+      careerQ: { field: '', aim: 'promotion', aimOther: '', focus: 'courses', focusOther: '', hours: 5, from: 19, to: 22, where: 'any' },
+      skillQ: { skill: '', level: 'beginner', hours: 4, from: 19, to: 22, where: 'any' },
+      moneyQ: { monthly: '', hours: 1, from: 20, to: 22, where: 'any' },
+      mindQ: { how: 'meditate', howOther: '', mins: 15, from: 21, to: 23 },
+      socialQ: { who: 'both', hours: 3, from: 18, to: 21, where: 'weekend' },
+      readQ: { mins: 20, from: 21, to: 23 },
+      otherQ: { name: '', hours: 3, from: 19, to: 21, where: 'any' },
       prayQ: { current: [], place: 'home', quran: 15, city: 'amman', remind: true, church: true }
     };
   }
@@ -257,14 +267,21 @@
       s.push('grid:idealWork');
       if (split) s.push('grid:idealWeekend');
     }
-    ['weight', 'career', 'skill', 'pray'].forEach(function (g) { if (d.goals.indexOf(g) >= 0) s.push('q:' + g); });
+    ['weight', 'career', 'skill', 'money', 'mind', 'social', 'reading', 'other', 'pray'].forEach(function (g) { if (d.goals.indexOf(g) >= 0) s.push('q:' + g); });
     s.push('review');
     return s;
   }
   function startOnboarding(redo) {
     var d = redo && state.profile && state.profile.grids ? clone(state.profile) : obDefaults();
     var defs = obDefaults();
-    ['weightQ', 'careerQ', 'skillQ', 'prayQ'].forEach(function (k) { d[k] = Object.assign({}, defs[k], d[k] || {}); });
+    // Older profiles chose "Mornings" and so on; turn that into the hour range the setup now asks for.
+    var LEGACY = { morning: [6, 9], afterwork: [17, 20], evening: [19, 22], weekend: [10, 14] };
+    ['weightQ', 'careerQ', 'skillQ'].forEach(function (k) {
+      var q = d[k];
+      if (q && q.from == null && LEGACY[q.time]) { q.from = LEGACY[q.time][0]; q.to = LEGACY[q.time][1]; if (q.time === 'weekend') q.where = 'weekend'; }
+      if (q) { delete q.time; delete q.limits; }
+    });
+    Object.keys(defs).forEach(function (k) { if (/Q$/.test(k)) d[k] = Object.assign({}, defs[k], d[k] || {}); });
     OB = { d: d, i: 0, paint: 'work', redo: !!redo };
     closeSheetSilently();
     document.body.classList.add('ob');
@@ -280,6 +297,24 @@
         (numeric ? ' data-num="1"' : '') + ' aria-pressed="' + on + '">' + esc(o[1]) + (o[2] ? '<small>' + esc(o[2]) + '</small>' : '') + '</button>';
     }).join('') + '</div>';
   }
+  // A row of chips that ends with "Other", which opens a box for the person's own answer.
+  function chipsOther(path, options, otherLabel) {
+    var cur = getPath(OB.d, path), opts = options.concat([['other', 'Other']]);
+    return chips(path, opts) + (cur === 'other' ? field(path + 'Other', otherLabel, 'text', 'maxlength="50"') : '');
+  }
+  function hrOpts(from, to, cur) {
+    var o = '';
+    for (var h = from; h <= to; h++) o += '<option value="' + h + '"' + (+cur === h ? ' selected' : '') + '>' + (h === 24 ? '12 am (midnight)' : hourLabel(h)) + '</option>';
+    return o;
+  }
+  // "From 5 pm to 8 pm": the hours of the day, picked from a list.
+  function hourRange(path, label) {
+    var Q = getPath(OB.d, path) || {};
+    return '<div class="q"><span class="flabel">' + esc(label) + '</span><div class="two">' +
+      '<label class="field"><span>From</span><select data-ob-sel="' + path + '.from">' + hrOpts(0, 23, Q.from) + '</select></label>' +
+      '<label class="field"><span>To</span><select data-ob-sel="' + path + '.to">' + hrOpts(1, 24, Q.to) + '</select></label></div></div>';
+  }
+  var WHERE = [['any', 'Any day'], ['weekend', 'Mostly my days off']];
   function field(path, label, type, attrs, hint) {
     var v = getPath(OB.d, path);
     return '<label class="field"><span>' + esc(label) + '</span><input type="' + type + '" data-ob="' + path + '" value="' + esc(v == null ? '' : v) + '" ' + (attrs || '') + '></label>' +
@@ -301,6 +336,7 @@
     else if (step === 'q:career') body = obCareer();
     else if (step === 'q:skill') body = obSkill();
     else if (step === 'q:pray') body = obPray();
+    else if (/^q:(money|mind|social|reading|other)$/.test(step)) body = obExtra(step.slice(2));
     else if (step === 'review') body = obReview();
 
     var next = step === 'intro' ? 'Let’s start' : step === 'review' ? 'Start my plan' :
@@ -410,6 +446,16 @@
       '<ol class="hours">' + rows + '</ol>' +
       '<button class="linkbtn" data-act="ob-fill-empty">Fill empty hours with the selected activity</button><br>' + copy;
   }
+  // A time of day set from lists (hour, then minutes), not a clock pop-up. The chosen time is kept
+  // in a hidden input, so the code that reads attrs (id or class) still gets "HH:MM".
+  function timeSelect(attrs, value) {
+    var mins = toMin(value || '00:00'), h = Math.floor(mins / 60) % 24, mi = mins % 60, ho = '', mo = '', steps = [0, 15, 30, 45];
+    if (steps.indexOf(mi) < 0) { steps.push(mi); steps.sort(function (a, b) { return a - b; }); }
+    for (var i = 0; i < 24; i++) ho += '<option value="' + i + '"' + (i === h ? ' selected' : '') + '>' + hourLabel(i) + '</option>';
+    steps.forEach(function (x) { mo += '<option value="' + x + '"' + (x === mi ? ' selected' : '') + '>:' + pad(x) + '</option>'; });
+    return '<span class="tsel"><input type="hidden" ' + attrs + ' value="' + pad(h) + ':' + pad(mi) + '">' +
+      '<select data-tsel="h" aria-label="Hour">' + ho + '</select><select data-tsel="m" aria-label="Minutes">' + mo + '</select></span>';
+  }
   function currentGridKey() { var s = obSteps(OB.d)[OB.i]; return s.indexOf('grid:') === 0 ? s.slice(5) : null; }
 
   function obWeight() {
@@ -420,27 +466,59 @@
     return '<p class="ob-step">Weight</p><h2>Tell me about your weight goal</h2>' +
       '<p class="lead">This sets your calories, macros and training days.</p>' +
       '<div class="q"><span class="flabel">I want to</span>' + chips('weightQ.direction', [['lose', 'Lose weight'], ['gain', 'Gain weight'], ['muscle', 'Build muscle, same weight']]) + '</div>' +
-      (dir !== 'muscle' ? field('weightQ.goal', 'Goal weight (kg)', 'number', 'inputmode="decimal" step="0.1" min="30" max="300" placeholder="e.g. 85"') +
+      (dir !== 'muscle' ? field('weightQ.goal', 'Goal weight (kg)', 'number', 'inputmode="decimal" step="0.1" min="30" max="300"') +
         '<div class="q"><span class="flabel">How fast</span>' + chips('weightQ.pace', pace) + '</div>' : '') +
       '<div class="q"><span class="flabel">Your job</span>' + chips('weightQ.activity', [['desk', 'Desk job', 'mostly sitting'], ['feet', 'On my feet', 'a lot of standing'], ['physical', 'Physical job']]) + '</div>' +
       '<div class="q"><span class="flabel">Training days a week</span>' + chips('weightQ.days', [[2, '2'], [3, '3'], [4, '4'], [5, '5']], true) + '</div>' +
-      '<div class="q"><span class="flabel">Best time to train</span>' + chips('weightQ.time', [['morning', 'Morning'], ['afterwork', 'Right after work'], ['evening', 'Late evening']]) + '</div>' +
-      field('weightQ.limits', 'Injuries or limits (optional)', 'text', 'maxlength="60" placeholder="e.g. lower-back disc"');
+      hourRange('weightQ', 'Hours you can train');
   }
   function obCareer() {
     return '<p class="ob-step">Career</p><h2>Where do you want your career to go?</h2>' +
-      field('careerQ.field', 'Your field or job', 'text', 'maxlength="50" placeholder="e.g. Telecom engineering"') +
-      '<div class="q"><span class="flabel">Right now, growth means</span>' + chips('careerQ.aim', [['promotion', 'A promotion where I am'], ['newjob', 'A new job'], ['business', 'Starting a business'], ['side', 'Growing a side business']]) + '</div>' +
-      '<div class="q"><span class="flabel">Main way you’ll grow</span>' + chips('careerQ.focus', Object.keys(Planner.CAREER_FOCUS).map(function (k) { return [k, Planner.CAREER_FOCUS[k]]; })) + '</div>' +
+      field('careerQ.field', 'Your field or role', 'text', 'maxlength="50"') +
+      '<div class="q"><span class="flabel">Right now, growth means</span>' + chipsOther('careerQ.aim', [['promotion', 'A promotion'], ['bigger', 'A bigger role or team'], ['expert', 'Becoming the expert in my area'], ['lead', 'Leading people or projects']], 'What growth means to you') + '</div>' +
+      '<div class="q"><span class="flabel">Main way you’ll grow</span>' + chipsOther('careerQ.focus', Object.keys(Planner.CAREER_FOCUS).map(function (k) { return [k, Planner.CAREER_FOCUS[k]]; }), 'Your own way to grow') + '</div>' +
       '<div class="q"><span class="flabel">Hours a week you can give it</span>' + chips('careerQ.hours', [[3, '3 h'], [5, '5 h'], [7, '7 h'], [10, '10 h']], true) + '</div>' +
-      '<div class="q"><span class="flabel">Best time</span>' + chips('careerQ.time', [['morning', 'Mornings'], ['evening', 'Evenings'], ['weekend', 'Mostly weekends']]) + '</div>';
+      hourRange('careerQ', 'Hours of the day that suit you') +
+      '<div class="q"><span class="flabel">Which days</span>' + chips('careerQ.where', WHERE) + '</div>';
   }
   function obSkill() {
     return '<p class="ob-step">New skill</p><h2>What do you want to learn?</h2>' +
-      field('skillQ.skill', 'The skill', 'text', 'maxlength="40" placeholder="e.g. German, guitar, Python"') +
+      field('skillQ.skill', 'The skill', 'text', 'maxlength="40"') +
       '<div class="q"><span class="flabel">Your level</span>' + chips('skillQ.level', [['beginner', 'Complete beginner'], ['some', 'Some experience'], ['improve', 'Improving a skill I have']]) + '</div>' +
       '<div class="q"><span class="flabel">Hours a week</span>' + chips('skillQ.hours', [[2, '2 h'], [4, '4 h'], [6, '6 h'], [8, '8 h']], true) + '</div>' +
-      '<div class="q"><span class="flabel">Best time</span>' + chips('skillQ.time', [['morning', 'Mornings'], ['evening', 'Evenings'], ['weekend', 'Mostly weekends']]) + '</div>';
+      hourRange('skillQ', 'Hours of the day that suit you') +
+      '<div class="q"><span class="flabel">Which days</span>' + chips('skillQ.where', WHERE) + '</div>';
+  }
+  // The goals added after the first four. Each asks what, how much, and between which hours.
+  function obExtra(g) {
+    var head = function (step, title, lead) { return '<p class="ob-step">' + step + '</p><h2>' + title + '</h2>' + (lead ? '<p class="lead">' + lead + '</p>' : ''); };
+    if (g === 'money') {
+      return head('Money', 'Let’s save more', 'A weekly check-in to look at your spending, and a monthly amount to put aside.') +
+        field('moneyQ.monthly', 'Amount to save each month (JOD)', 'number', 'inputmode="decimal" min="0" step="1"') +
+        '<div class="q"><span class="flabel">Hours a week for money check-ins</span>' + chips('moneyQ.hours', [[1, '1 h'], [2, '2 h'], [3, '3 h']], true) + '</div>' +
+        hourRange('moneyQ', 'Hours of the day that suit you') + '<div class="q"><span class="flabel">Which days</span>' + chips('moneyQ.where', WHERE) + '</div>';
+    }
+    if (g === 'mind') {
+      return head('Mind', 'Make room to breathe', 'A small daily block, every day, just for your head.') +
+        '<div class="q"><span class="flabel">What helps you most</span>' + chipsOther('mindQ.how', Object.keys(Planner.MIND_HOW).map(function (k) { return [k, Planner.MIND_HOW[k]]; }), 'What helps you') + '</div>' +
+        '<div class="q"><span class="flabel">Minutes a day</span>' + chips('mindQ.mins', [[10, '10 min'], [15, '15 min'], [20, '20 min'], [30, '30 min']], true) + '</div>' +
+        hourRange('mindQ', 'Hours of the day that suit you');
+    }
+    if (g === 'social') {
+      return head('People', 'Time for the people who matter') +
+        '<div class="q"><span class="flabel">Who</span>' + chips('socialQ.who', [['family', 'Family'], ['friends', 'Friends'], ['both', 'Both']]) + '</div>' +
+        '<div class="q"><span class="flabel">Hours a week</span>' + chips('socialQ.hours', [[2, '2 h'], [4, '4 h'], [6, '6 h'], [8, '8 h']], true) + '</div>' +
+        hourRange('socialQ', 'Hours of the day that suit you') + '<div class="q"><span class="flabel">Which days</span>' + chips('socialQ.where', WHERE) + '</div>';
+    }
+    if (g === 'reading') {
+      return head('Reading', 'A little every day') +
+        '<div class="q"><span class="flabel">Minutes a day</span>' + chips('readQ.mins', [[15, '15 min'], [20, '20 min'], [30, '30 min'], [45, '45 min']], true) + '</div>' +
+        hourRange('readQ', 'Hours of the day that suit you');
+    }
+    return head('Your goal', 'What do you want to work on?') +
+      field('otherQ.name', 'Your goal', 'text', 'maxlength="50"') +
+      '<div class="q"><span class="flabel">Hours a week</span>' + chips('otherQ.hours', [[2, '2 h'], [4, '4 h'], [6, '6 h'], [8, '8 h']], true) + '</div>' +
+      hourRange('otherQ', 'Hours of the day that suit you') + '<div class="q"><span class="flabel">Which days</span>' + chips('otherQ.where', WHERE) + '</div>';
   }
   function obPray() {
     var Q = OB.d.prayQ;
@@ -525,6 +603,15 @@
       if (d.weightQ.direction === 'gain' && g <= +d.weight) return 'For gaining weight, the goal should be above your current ' + d.weight + ' kg.';
     }
     if (step === 'q:skill' && !String(d.skillQ.skill).trim()) return 'Tell me which skill you want to learn.';
+    if (step === 'q:career') {
+      if (d.careerQ.aim === 'other' && !String(d.careerQ.aimOther || '').trim()) return 'Tell me what growth means to you.';
+      if (d.careerQ.focus === 'other' && !String(d.careerQ.focusOther || '').trim()) return 'Tell me how you want to grow.';
+    }
+    if (step === 'q:mind' && d.mindQ.how === 'other' && !String(d.mindQ.howOther || '').trim()) return 'Tell me what helps you.';
+    if (step === 'q:other' && !String(d.otherQ.name || '').trim()) return 'Name your goal.';
+    if (step === 'q:money' && d.moneyQ.monthly !== '' && !(+d.moneyQ.monthly >= 0)) return 'Enter the monthly amount as a number.';
+    var QK = { 'q:weight': 'weightQ', 'q:career': 'careerQ', 'q:skill': 'skillQ', 'q:money': 'moneyQ', 'q:mind': 'mindQ', 'q:social': 'socialQ', 'q:reading': 'readQ', 'q:other': 'otherQ' }[step];
+    if (QK && !(+d[QK].to > +d[QK].from)) return 'The “To” hour has to be later than the “From” hour.';
     return '';
   }
 
@@ -545,6 +632,11 @@
     d.prayQ.remind = d.prayQ.remind === true || d.prayQ.remind === 'true';
     d.prayQ.church = d.prayQ.church === true || d.prayQ.church === 'true';
     if (d.religion === 'other') d.goals = d.goals.filter(function (g) { return g !== 'pray'; });
+    if (d.goals.indexOf('money') >= 0 && +d.moneyQ.monthly > 0) {
+      state.life = state.life || {};
+      state.life.savings = state.life.savings || { monthly: 0, cur: 'JOD', goals: [] };
+      state.life.savings.monthly = +d.moneyQ.monthly;
+    }
     state.profile = d;
     state.templates = res.templates;
     state.overrides = {};
@@ -661,45 +753,7 @@
       top = '<div><span class="lbl">Now</span><div class="big">Day is done</div><div class="sub">Rest. Tomorrow’s plan is ready.</div></div>';
     }
     var nl = next ? '<div class="nextline"><b>Next</b>' + esc(next.title) + ' · ' + fmt12(next.start) + '</div>' : '';
-    return '<div class="card now">' + top + nl + '</div>';
-  }
-
-  function renderToday() {
-    var t = today(), k = dateKey(t);
-    var blocks = blocksForDate(t);
-    var rec = peekDay(k), m = nowMin(), doneCount = 0;
-    var rows = blocks.map(function (b) {
-      var s = toMin(b.start), e = toMin(b.end), done = !!rec.done[b.id];
-      if (done) doneCount++;
-      var cls = 'tl' + (done ? ' done' : '') + (m >= e ? ' past' : '') + (m >= s && m < e ? ' current' : '');
-      return '<li class="' + cls + '" data-act="toggle-done" data-id="' + esc(b.id) + '" role="button" aria-pressed="' + done + '">' +
-        '<span class="tl-time">' + fmt12(b.start) + '<small>' + fmt12(b.end) + '</small></span>' +
-        '<span class="tl-bar" style="background:' + catColor(b.cat) + '"></span>' +
-        '<span class="tl-title">' + esc(b.title) + '<small>' + esc(CATS[b.cat] || 'Rest') + '</small></span>' +
-        '<span class="tl-x">' + (!done && m >= e && !b.prayer && !b.overlay && b.cat !== 'sleep' && b.cat !== 'free' ? '<button class="tl-move" data-act="move-later" data-id="' + esc(b.id) + '">Move</button>' : '') +
-        runHooks('timeline', b, done, m >= s && m < e) + '</span>' +
-        '<span class="tl-check" aria-hidden="true"></span></li>';
-    }).join('');
-    var habits = activeHabits().map(function (h) {
-      var on = !!rec.habits[h.k];
-      return '<button class="pill-btn' + (on ? ' on' : '') + '" data-act="habit" data-k="' + h.k + '" aria-pressed="' + on + '">' + esc(h.l) + '</button>';
-    }).join('');
-    var remindCard = '';
-    if (LN() && !state.settings.reminders && !state.settings.reminderAsked) {
-      remindCard = '<div class="card" style="margin-top:14px"><b>Get reminded of each task?</b><br><span class="muted small">5 minutes before, and when it starts.</span>' +
-        '<div class="row-btns" style="margin-top:10px"><button class="btn" data-act="remind-yes">Turn on reminders</button><button class="btn ghost" data-act="remind-no">Not now</button></div></div>';
-    }
-    var oneOff = state.overrides[k] ? '<p class="muted small" style="margin-top:8px">Today has its own one-off plan.</p>' : '';
-    var yRev = (peekDay(dateKey(addDays(t, -1))).review || {});
-    var fromLast = yRev.tomorrow && yRev.tomorrow.trim() ?
-      '<div class="card from-last"><span class="lbl">From last night</span><p class="notr">' + esc(yRev.tomorrow) + '</p></div>' : '';
-    return runHooks('todayTop', k, rec) + nowCard(blocks) + remindCard +
-      '<section><div class="sec-h"><h2>Today’s plan</h2><span class="muted">' + doneCount + ' of ' + blocks.length + ' done</span></div>' +
-      (blocks.length ? '<ol class="timeline">' + rows + '</ol>' : '<p class="muted">Nothing planned today. Add blocks in the Plan tab.</p>') + oneOff +
-      '<button class="linkbtn" data-act="edit-today">Change just today’s plan</button></section>' +
-      '<section><h2>Daily check-in</h2><div class="habits">' + habits + '</div></section>' + runHooks('today', k, rec) +
-      '<section><h2>End of the day</h2><button class="btn block report-btn" data-act="open-report">See today’s report</button>' +
-      '<p class="flabel" style="margin-top:14px">End-of-day note</p><textarea id="note" data-field="note" data-date="' + k + '" placeholder="What went well, what got in the way, what is on your mind.">' + esc(rec.note || '') + '</textarea></section>';
+    return '<div class="card now">' + top + nl + runHooks('nowExtra') + '</div>';
   }
 
   /* =====================================================================
@@ -758,9 +812,9 @@
     sheetCtx = { kind: 'block', id: b ? b.id : null, cat: cat };
     var s = planScope();
     openSheet('<h3>' + (b ? 'Edit block' : 'New block') + '</h3><p class="muted small">' + esc(s === 'today' ? 'Only today' : 'Every ' + DAYS_FULL[s]) + '</p>' +
-      '<label class="field"><span>What</span><input type="text" id="f-title" maxlength="60" value="' + esc(b ? b.title : '') + '" placeholder="e.g. Gym, read, call a friend"></label>' +
-      '<div class="two"><label class="field"><span>Start</span><input type="time" id="f-start" value="' + start + '"></label>' +
-      '<label class="field"><span>End</span><input type="time" id="f-end" value="' + end + '"></label></div>' +
+      '<label class="field"><span>What</span><input type="text" id="f-title" maxlength="60" value="' + esc(b ? b.title : '') + '"></label>' +
+      '<div class="two"><label class="field"><span>Start</span>' + timeSelect('id="f-start"', start) + '</label>' +
+      '<label class="field"><span>End</span>' + timeSelect('id="f-end"', end) + '</label></div>' +
       '<div class="field"><span class="flabel">Type</span><div class="chips wrap" id="f-cats">' +
       CAT_KEYS.map(function (c) {
         return '<button type="button" class="chip' + (c === cat ? ' on' : '') + '" data-act="pick-cat" data-cat="' + c + '"><span class="dot" style="background:' + catColor(c) + '"></span>' + esc(CATS[c]) + '</button>';
@@ -868,8 +922,8 @@
         '<div class="row-btns"><button class="btn" data-act="m-add-picked">Add</button><button class="btn ghost" data-act="m-back">Back</button></div>';
     } else if (sheetCtx.view === 'custom') {
       html = '<h3>Your own food</h3><p class="muted small">Enter the values for one serving.</p>' +
-        '<label class="field"><span>Name</span><input type="text" id="fc-name" maxlength="40" placeholder="e.g. Mum’s mansaf"></label>' +
-        '<label class="field"><span>Serving</span><input type="text" id="fc-unit" maxlength="30" placeholder="e.g. 1 plate"></label>' +
+        '<label class="field"><span>Name</span><input type="text" id="fc-name" maxlength="40"></label>' +
+        '<label class="field"><span>Serving</span><input type="text" id="fc-unit" maxlength="30"></label>' +
         '<div class="three"><label class="field"><span>Protein g</span><input type="number" id="fc-p" inputmode="decimal" step="0.1" min="0"></label>' +
         '<label class="field"><span>Carbs g</span><input type="number" id="fc-c" inputmode="decimal" step="0.1" min="0"></label>' +
         '<label class="field"><span>Fat g</span><input type="number" id="fc-f" inputmode="decimal" step="0.1" min="0"></label></div>' +
@@ -1015,7 +1069,7 @@
       (tBlocks.length ? '<p class="muted small">' + tBlocks.length + ' tasks · starts ' + fmt12(tBlocks[0].start) + '</p>' + miniList(tBlocks) : '<p class="muted">Nothing planned yet.</p>') +
       '<label class="field"><span>Note for tomorrow</span><textarea data-rv="tomorrow" data-date="' + k + '" placeholder="It shows up at the top of tomorrow’s Today screen.">' + esc(rv.tomorrow || '') + '</textarea></label></div></section>';
 
-    return nav + score +
+    return nav + score + runHooks('reportExtra', k, rec) +
       '<section><h2>Not done' + (missed.length ? ' · ' + missed.length : '') + '</h2>' + missedHtml + '</section>' +
       '<section><h2>Done' + (done.length ? ' · ' + done.length : '') + '</h2>' + doneHtml + '</section>' + upHtml +
       '<section><h2>How was the day?</h2><div class="card"><div class="choice">' + DAY_FEEL.map(function (f) {
@@ -1677,6 +1731,14 @@
     'm-next': function () { var n = addDays(fromKey(macroDate || todayKey()), 1); if (n <= today()) { macroDate = dateKey(n); render(); } },
     'm-today': function () { macroDate = null; render(); },
     'm-add': function () { sheetCtx = null; openFoodSheet('list'); },
+    // From the Today tab: always today's date, whatever day the Macros tab was last showing.
+    'td-add-food': function () { macroDate = null; sheetCtx = null; openFoodSheet('list'); },
+    'td-repeat': function () { macroDate = null; ACTIONS['m-repeat'](); },
+    'td-food-del': function (el) {
+      var k = todayKey(), id = el.getAttribute('data-id');
+      state.macros.log[k] = (state.macros.log[k] || []).filter(function (e) { return e.id !== id; });
+      save(); render(); toast('Removed');
+    },
     'm-pick': function (el) { var f = findFood(el.getAttribute('data-id')); if (f) openFoodSheet('pick', f); },
     'm-qty': function (el) {
       sheetCtx.qty = Math.max(0.5, Math.min(20, sheetCtx.qty + parseFloat(el.getAttribute('data-d'))));
@@ -1826,6 +1888,11 @@
       renderOb();
       return;
     }
+    if (t.hasAttribute('data-tsel')) {
+      var tw = t.closest('.tsel');
+      tw.querySelector('input[type=hidden]').value = pad(+tw.querySelector('[data-tsel=h]').value) + ':' + pad(+tw.querySelector('[data-tsel=m]').value);
+      return;
+    }
     if (t.hasAttribute('data-ob-sel')) { setPath(OB.d, t.getAttribute('data-ob-sel'), t.value); return; }
     var key2 = t.getAttribute && t.getAttribute('data-set');
     if (key2) {
@@ -1886,7 +1953,7 @@
 
   /* ---------------- shared API for life.js ---------------- */
   window.LP = {
-    st: function () { return state; }, HOOKS: HOOKS, TABS: TABS, ACTIONS: ACTIONS, CATS: CATS, PRAYERS: PRAYERS, DAYS: DAYS, DAYS_FULL: DAYS_FULL, MONTHS: MONTHS,
+    timeSelect: timeSelect, runHooks: runHooks, st: function () { return state; }, HOOKS: HOOKS, TABS: TABS, ACTIONS: ACTIONS, CATS: CATS, PRAYERS: PRAYERS, DAYS: DAYS, DAYS_FULL: DAYS_FULL, MONTHS: MONTHS,
     save: save, saveSoon: saveSoon, render: render, toast: toast, setTab: setTab, openSheet: openSheet, closeSheet: closeSheet,
     esc: esc, pad: pad, dateKey: dateKey, fromKey: fromKey, today: today, todayKey: todayKey, addDays: addDays, toMin: toMin, minToT: minToT,
     fmt12: fmt12, fmtDur: fmtDur, nowMin: nowMin, shortDate: shortDate, num1: num1, uid: uid, clone: clone, catColor: catColor, byStart: byStart,

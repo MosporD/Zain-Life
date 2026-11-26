@@ -49,7 +49,7 @@
 
   function form(s) {
     var name = s && s.name || '', from = s && keyOf(s.start) || L.todayKey(), to = s && lastDayKey(s.end) || L.dateKey(L.addDays(L.today(), 29));
-    return '<label class="field"><span>Challenge name</span><input type="text" class="notr" id="ch-name" maxlength="50" placeholder="e.g. Zain Steps November" value="' + esc(name) + '"></label>' +
+    return '<label class="field"><span>Challenge name</span><input type="text" class="notr" id="ch-name" maxlength="50" value="' + esc(name) + '"></label>' +
       '<div class="two"><label class="field"><span>First day</span><input type="date" id="ch-from" value="' + esc(from) + '"></label>' +
       '<label class="field"><span>Last day</span><input type="date" id="ch-to" value="' + esc(to) + '"></label></div>';
   }

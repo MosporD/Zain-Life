@@ -169,11 +169,48 @@
     var sleepM = grid.sleep * 60, wakeM = grid.wake * 60;
     if (sleepM < 1440) blocks.push({ title: 'Sleep', cat: 'sleep', remind: false, _start: sleepM, _end: 1440 });
     else if (sleepM > 1440) blocks.push({ title: 'Sleep', cat: 'sleep', remind: false, _start: sleepM, _end: 1440 + wakeM });
+    return blocks;
+  }
+  function finishBlocks(blocks) {
     return blocks.map(function (b) {
       var s = b._start % 1440, e = b._end % 1440;
       if (b._end === 1440 || (e === 0 && b._end > b._start)) e = 1439;      // ends at midnight → 11:59 pm
       return { id: uid(), start: mToT(s), end: mToT(e), title: b.title, cat: b.cat, remind: b.remind };
     }).sort(function (a, b) { return a.start < b.start ? -1 : a.start > b.start ? 1 : 0; });
+  }
+
+  // Overnight shifts: a day's blocks after midnight (the rest of the shift, winding down, sleep)
+  // really happen on the next calendar day. Only days with work after midnight hand their tail on;
+  // every other day keeps the usual wrap-around, so day-shift plans are unchanged.
+  function carryOvernight(raw) {
+    var tails = {}, any = false;
+    for (var d = 0; d < 7; d++) {
+      var night = raw[d].some(function (b) { return b.cat === 'work' && b._start >= 1440; });
+      tails[d] = night ? raw[d].filter(function (b) { return b._start >= 1440; }) : [];
+      if (night) { any = true; raw[d] = raw[d].filter(function (b) { return b._start < 1440; }); }
+    }
+    if (!any) return raw;
+    var out = {};
+    for (d = 0; d < 7; d++) {
+      var inc = tails[(d + 6) % 7].map(function (b) { return Object.assign({}, b, { _start: b._start - 1440, _end: b._end - 1440 }); });
+      var own = raw[d];
+      if (tails[d].length && !inc.length) {          // first night of a run: the morning before it is ordinary sleep
+        var upTo = Math.max.apply(null, tails[d].map(function (b) { return b._end - 1440; }));
+        inc = [{ title: 'Sleep', cat: 'sleep', remind: false, _start: 0, _end: upTo }];
+      }
+      inc.forEach(function (r) {
+        var next = [];
+        own.forEach(function (b) {
+          var s = b._start % 1440, e = s + (b._end - b._start);
+          if (e <= r._start || s >= r._end) { next.push(b); return; }
+          if (s < r._start) next.push(Object.assign({}, b, { _start: s, _end: r._start }));
+          if (e > r._end) next.push(Object.assign({}, b, { _start: r._end, _end: e }));
+        });
+        own = next;
+      });
+      out[d] = own.concat(inc);
+    }
+    return out;
   }
 
   /* Builds 7 templates (0 = Sunday) from the profile's ideal days and goals.
@@ -248,7 +285,7 @@
         (+P.prayQ.quran > 0 ? ' Plus ' + P.prayQ.quran + ' min of Quran daily.' : ''));
     }
 
-    var templates = {}, shortfalls = [];
+    var templates = {}, raw = {}, shortfalls = [];
     for (var day = 0; day < 7; day++) {
       var isWork = workDays.indexOf(day) >= 0;
       var base = isWork ? P.grids.idealWork : (P.grids.idealWeekend || P.grids.idealWork);
@@ -261,8 +298,10 @@
         }
       });
       finalize(slots, limit);
-      templates[day] = toBlocks(slots, base);
+      raw[day] = toBlocks(slots, base);
     }
+    raw = carryOvernight(raw);
+    for (day = 0; day < 7; day++) templates[day] = finishBlocks(raw[day]);
     return { templates: templates, notes: notes, shortfalls: shortfalls };
   }
 

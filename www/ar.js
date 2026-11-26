@@ -435,5 +435,21 @@ window.AR_DICT = {
   'Less than a minute, not logged': 'أقل من دقيقة، لم يُسجّل', 'Tap again to discard': 'اضغط مجددًا للتجاهل', 'What did you work on? (optional)': 'على ماذا عملت؟ (اختياري)',
   'Time added': 'تمت إضافة الوقت', 'Timer started': 'بدأ المؤقت', 'Meeting now': 'اجتماع الآن',
   'Next meeting': 'الاجتماع التالي', 'Work logged': 'عمل مسجّل', 'Tasks done': 'مهام منجزة',
-  'Due date': 'تاريخ الاستحقاق'
+  'Due date': 'تاريخ الاستحقاق',
+  'Background': 'الخلفية', 'Animated': 'متحركة', 'Static': 'ثابتة',
+  'General': 'عام', 'Weight and steps': 'الوزن والخطوات', 'Social media': 'وسائل التواصل',
+  'Scrolling alerts are in the Focus tab.': 'تنبيهات التمرير موجودة في تبويب التركيز.',
+  'Nothing to set here yet.': 'لا يوجد ما يُضبط هنا بعد.',
+  'Work hours': 'ساعات العمل', 'Set your work hours': 'حدّد ساعات عملك', 'Starts': 'يبدأ', 'Ends': 'ينتهي', 'Work days': 'أيام العمل',
+  'Save hours': 'حفظ الساعات', 'Change': 'تغيير', 'No work days': 'لا أيام عمل', 'Work hours saved': 'تم حفظ ساعات العمل',
+  'Not everyone works 8 to 5. Set your hours and your plan moves around them.': 'ليس الجميع يعمل من 8 إلى 5. حدّد ساعاتك وستتكيّف خطتك معها.',
+  'Your plan is rebuilt around these hours. Changes you made by hand to workdays in the Plan tab are replaced. For a night shift, set an end time earlier than the start, like 10 pm to 6 am.': 'سيُعاد بناء خطتك حول هذه الساعات. التعديلات اليدوية على أيام العمل في تبويب الخطة ستُستبدل. للمناوبة الليلية، اجعل وقت النهاية أبكر من البداية، مثل 10 م إلى 6 ص.',
+  '(overnight)': '(ليلية)', '(last night’s shift)': '(مناوبة الليلة الماضية)',
+  'Enter a start and an end time.': 'أدخل وقت البداية والنهاية.',
+  'That’s more than 16 hours. Check the times.': 'هذا أكثر من 16 ساعة. تحقّق من الأوقات.',
+  'Redo setup in Settings first, then set your work hours.': 'أعد الإعداد من الإعدادات أولاً، ثم حدّد ساعات عملك.',
+  'Run setup first to set your work hours.': 'شغّل الإعداد أولاً لتحديد ساعات عملك.',
+  'Erase everything?': 'مسح كل شيء؟', 'Erase everything': 'مسح كل شيء',
+  'This deletes your plan, tasks, time log, weights, money and history from this phone, then runs setup again. It can’t be undone.': 'سيحذف هذا خطتك ومهامك وسجل الوقت والأوزان والمال والسجل من هذا الهاتف، ثم يعيد الإعداد. لا يمكن التراجع عن ذلك.',
+  'Backup files you saved stay where they are.': 'ملفات النسخ الاحتياطي التي حفظتها تبقى في مكانها.'
 };

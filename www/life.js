@@ -933,7 +933,8 @@
     if (!force && b.last && daysAgo(b.last) < 7) return;
     saveBackupFile(true);
   }
-  H.settings.push(function () {
+  H.settings.push(function (group) {
+    if (group !== 'general') return '';
     var b = F().backup, native = !!NP();
     return '<section><h2>Backup files</h2><div class="card">' +
       '<label class="setrow"><span><span class="st">Weekly backup file</span><br><span class="sd">' + (native ? 'Saved to Downloads/ZainLife. Survives uninstalling the app.' : 'Works in the installed app') + '</span></span>' +

@@ -192,7 +192,7 @@
     var light = state.settings.theme === 'light';
     document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
     var m = document.querySelector('meta[name=theme-color]');
-    if (m) m.setAttribute('content', light ? '#f4f4f4' : '#000000');
+    if (m) m.setAttribute('content', light ? '#f3f1ff' : '#0a0822');
   }
 
   var TABS = {
@@ -1351,6 +1351,7 @@
   /* =====================================================================
      SETTINGS
      ===================================================================== */
+  var setGroup = 'general';
   function renderSettings() {
     var st = state.settings, native = !!LN(), P = state.profile;
     var goals = P && P.goals ? P.goals.map(function (g) { return GOALS[g] ? GOALS[g].t : g; }).join(', ') : '';
@@ -1362,13 +1363,23 @@
       }).join('') + '</span></div>' +
       '<div class="row-btns"><button class="btn ghost" data-act="redo-setup">Redo setup &amp; rebuild my plan</button></div></div>' :
       '<div class="card"><div class="row-btns" style="margin-top:0"><button class="btn" data-act="redo-setup">Run setup</button></div></div>';
-    return profile +
+    var groups = [['general', 'General'], ['health', 'Health'], ['focus', 'Focus'], ['work', 'Work']];
+    if (hasGoal('pray') && isMuslim()) groups.splice(1, 0, ['prayer', 'Prayer']);
+    if (!groups.some(function (g) { return g[0] === setGroup; })) setGroup = 'general';
+    var bar = '<div class="chips setgroups" role="tablist">' + groups.map(function (g) {
+      return '<button type="button" role="tab" class="chip' + (setGroup === g[0] ? ' on' : '') + '" data-act="set-group" data-v="' + g[0] + '" aria-selected="' + (setGroup === g[0]) + '">' + g[1] + '</button>';
+    }).join('') + '</div>';
+    var body = '';
+    if (setGroup === 'general') body = profile +
       '<section><h2>Look</h2><div class="card"><div class="setrow"><span class="st">Language</span><span class="chips notr">' +
       '<button class="chip' + (st.lang !== 'ar' ? ' on' : '') + '" data-act="lang" data-v="en">English</button>' +
       '<button class="chip' + (st.lang === 'ar' ? ' on' : '') + '" data-act="lang" data-v="ar">العربية</button></span></div>' +
       '<div class="setrow"><span class="st">Theme</span><span class="chips">' +
       '<button class="chip' + (st.theme !== 'light' ? ' on' : '') + '" data-act="theme" data-v="dark">Dark</button>' +
-      '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div></div></section>' +
+      '<button class="chip' + (st.theme === 'light' ? ' on' : '') + '" data-act="theme" data-v="light">Light</button></span></div>' +
+      '<div class="setrow"><span class="st">Background</span><span class="chips">' +
+      '<button class="chip' + (st.motion !== false ? ' on' : '') + '" data-act="motion" data-v="on">Animated</button>' +
+      '<button class="chip' + (st.motion === false ? ' on' : '') + '" data-act="motion" data-v="off">Static</button></span></div></div></section>' +
       '<section><h2>Reminders</h2><div class="card">' +
       '<label class="setrow"><span><span class="st">Block reminders</span><br><span class="sd">' + (native ? '5 minutes before each task, and when it starts' : 'Works in the installed app') + '</span></span>' +
       '<span class="switch"><input type="checkbox" id="set-reminders"' + (st.reminders ? ' checked' : '') + (native ? '' : ' disabled') + '><span></span></span></label>' +
@@ -1376,21 +1387,26 @@
       '<span class="switch"><input type="checkbox" id="set-report"' + (st.reportReminder ? ' checked' : '') + '><span></span></span></label>' +
       (native ? '<div class="setrow"><span><span class="st">Test it</span><br><span class="sd">Pops up in 5 seconds. Lock the phone or switch apps to see it.</span></span>' +
         '<button class="btn ghost" data-act="test-reminder">Send test</button></div>' : '') +
-      (hasGoal('pray') && isMuslim() ? '<label class="setrow"><span><span class="st">Prayer reminders</span><br><span class="sd">At each prayer time</span></span>' +
-        '<span class="switch"><input type="checkbox" id="set-prayer"' + (st.prayerReminders ? ' checked' : '') + '><span></span></span></label>' +
-        '<label class="setrow"><span class="st">City for prayer times</span><select data-set="city" style="width:150px">' + cityOpts + '</select></label>' : '') +
       '</div></section>' +
-      '<section><h2>Goals</h2><div class="card">' +
-      '<label class="setrow"><span class="st">Starting weight (kg)</span><input type="number" step="0.1" data-set="start" value="' + esc(st.start == null ? '' : st.start) + '"></label>' +
-      '<label class="setrow"><span class="st">Goal weight (kg)</span><input type="number" step="0.1" data-set="target" value="' + esc(st.target == null ? '' : st.target) + '"></label>' +
-      '<label class="setrow"><span class="st">Daily step goal</span><input type="number" step="500" min="1000" max="50000" inputmode="numeric" data-set="stepGoal" value="' + esc(st.stepGoal || 8000) + '"></label>' +
-      '<label class="setrow"><span class="st">Daily social media limit (min)</span><input type="number" step="5" min="0" data-set="limit" value="' + esc(st.limit) + '"></label></div></section>' +
       '<section><h2>Backup</h2><div class="card">' +
       '<div class="row-btns"><button class="btn" data-act="export">Copy backup</button><button class="btn ghost" data-act="import">Restore from backup</button></div>' +
       '<textarea id="bk" placeholder="Your backup text appears here. To restore, paste a backup here and tap Restore." style="margin-top:12px;font-size:.8rem"></textarea></div></section>' +
-      runHooks('settings') +
+      runHooks('settings', 'general') +
       '<section><div class="card"><div class="setrow"><span><span class="st">Start over</span><br><span class="sd">Erase everything and run setup again</span></span><button class="btn warn" data-act="reset-all">Erase</button></div></div>' +
       '<p class="muted small" style="text-align:center;margin-top:18px">Zain Life 1.0 · a general plan, not medical or financial advice. Your physio and doctor know your body; where they differ, follow them.</p></section>';
+    else if (setGroup === 'prayer') body = '<section><h2>Prayer</h2><div class="card">' +
+      ('<label class="setrow"><span><span class="st">Prayer reminders</span><br><span class="sd">At each prayer time</span></span>' +
+        '<span class="switch"><input type="checkbox" id="set-prayer"' + (st.prayerReminders ? ' checked' : '') + '><span></span></span></label>' +
+        '<label class="setrow"><span class="st">City for prayer times</span><select data-set="city" style="width:150px">' + cityOpts + '</select></label>') + '</div></section>' + runHooks('settings', 'prayer');
+    else if (setGroup === 'health') body = '<section><h2>Weight and steps</h2><div class="card">' +
+      '<label class="setrow"><span class="st">Starting weight (kg)</span><input type="number" step="0.1" data-set="start" value="' + esc(st.start == null ? '' : st.start) + '"></label>' +
+      '<label class="setrow"><span class="st">Goal weight (kg)</span><input type="number" step="0.1" data-set="target" value="' + esc(st.target == null ? '' : st.target) + '"></label>' +
+      '<label class="setrow"><span class="st">Daily step goal</span><input type="number" step="500" min="1000" max="50000" inputmode="numeric" data-set="stepGoal" value="' + esc(st.stepGoal || 8000) + '"></label></div></section>' + runHooks('settings', 'health');
+    else if (setGroup === 'focus') body = '<section><h2>Social media</h2><div class="card">' +
+      '<label class="setrow"><span class="st">Daily social media limit (min)</span><input type="number" step="5" min="0" data-set="limit" value="' + esc(st.limit) + '"></label>' +
+      '<p class="muted small" style="margin-top:8px">Scrolling alerts are in the Focus tab.</p></div></section>' + runHooks('settings', 'focus');
+    else body = runHooks('settings', setGroup) || '<div class="card"><p class="muted small">Nothing to set here yet.</p></div>';
+    return bar + body;
   }
   function exportData() {
     var txt = JSON.stringify(state), bk = $('bk');
@@ -1749,8 +1765,15 @@
     'theme': function (el) { state.settings.theme = el.getAttribute('data-v'); save(); applyTheme(); render(); },
     'export': exportData,
     'import': importData,
-    'reset-all': function (el) {
-      if (!armed(el, 'Tap again to erase all')) return;
+    'set-group': function (el) { setGroup = el.getAttribute('data-v'); render(); window.scrollTo(0, 0); },
+    'reset-all': function () {
+      openSheet('<h3>Erase everything?</h3>' +
+        '<p>This deletes your plan, tasks, time log, weights, money and history from this phone, then runs setup again. It can’t be undone.</p>' +
+        '<p class="muted small" style="margin-top:8px">Backup files you saved stay where they are.</p>' +
+        '<div class="row-btns"><button class="btn ghost" data-act="close-sheet">Cancel</button><button class="btn warn" data-act="reset-confirm">Erase everything</button></div>');
+    },
+    'reset-confirm': function () {
+      closeSheet();
       state = defaultState();
       save(); applyTheme(); planSel = null; macroDate = null; queueReschedule();
       startOnboarding(false);

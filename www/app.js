@@ -247,11 +247,16 @@
   }
   function weekendOf(d) { return [0, 1, 2, 3, 4, 5, 6].filter(function (x) { return d.workDays.indexOf(x) < 0; }); }
   function obSteps(d) {
-    var s = ['intro', 'about', 'goals', 'days', 'grid:curWork'];
-    var split = d.workDays.length > 0 && weekendOf(d).length > 0;
-    if (split) s.push('grid:curWeekend');
-    s.push('grid:idealWork');
-    if (split) s.push('grid:idealWeekend');
+    var s = ['intro', 'about', 'goals', 'days'];
+    // The hour-by-hour day grids are only asked in Settings > Redo setup. First-time setup
+    // starts from a standard day (see ensureIdealGrids) that people adjust in the Plan tab.
+    if (OB && OB.redo) {
+      var split = d.workDays.length > 0 && weekendOf(d).length > 0;
+      s.push('grid:curWork');
+      if (split) s.push('grid:curWeekend');
+      s.push('grid:idealWork');
+      if (split) s.push('grid:idealWeekend');
+    }
     ['weight', 'career', 'skill', 'pray'].forEach(function (g) { if (d.goals.indexOf(g) >= 0) s.push('q:' + g); });
     s.push('review');
     return s;
@@ -313,8 +318,9 @@
     return '<div class="ob-hero">' + heartSvg() + '</div>' +
       '<p class="ob-step" style="text-align:center">' + (OB.redo ? 'Redo setup' : 'Welcome') + '</p>' +
       '<h2 style="text-align:center">' + (OB.redo ? 'Let’s rebuild your plan' : 'Welcome to Zain Life') + '</h2>' +
-      '<p class="lead" style="text-align:center;max-width:34ch;margin:0 auto">A few questions first: about you, your goals, and how your days look now. ' +
-      'It takes about 10 minutes. At the end you get an hour-by-hour plan built around your goals, and you can change any of it later.</p>' +
+      '<p class="lead" style="text-align:center;max-width:34ch;margin:0 auto">' + (OB.redo ? 'A few questions first: about you, your goals, and how your days look now. ' +
+      'It takes about 10 minutes. At the end you get an hour-by-hour plan built around your goals, and you can change any of it later.' :
+      'A few quick questions about you and your goals. It takes about 3 minutes. At the end you get a daily plan built around your goals, and you can change any of it later.') + '</p>' +
       '<div class="choice notr" style="justify-content:center;margin-top:18px">' +
       '<button type="button" class="chip' + (state.settings.lang !== 'ar' ? ' on' : '') + '" data-act="lang" data-v="en">English</button>' +
       '<button type="button" class="chip' + (state.settings.lang === 'ar' ? ' on' : '') + '" data-act="lang" data-v="ar">العربية</button></div>';
@@ -463,8 +469,13 @@
       return '<li><span class="bar" style="background:' + catColor(b.cat) + '"></span><span class="t">' + fmt12(b.start) + ' – ' + fmt12(b.end) + '</span><span class="n">' + esc(b.title) + '</span></li>';
     }).join('') + '</ul>';
   }
+  function ensureIdealGrids(d) {
+    if (!d.grids.idealWork) d.grids.idealWork = clone(d.grids.curWork);
+    if (!d.grids.idealWeekend) d.grids.idealWeekend = clone(d.grids.curWeekend);
+  }
   function obReview() {
     var d = OB.d;
+    ensureIdealGrids(d);
     var res = Planner.buildTemplates(d, state.settings.limit);
     var m = Planner.macroTargets(d);
     OB.res = res; OB.macros = m;
@@ -479,10 +490,11 @@
       return res.templates[day].concat(prayerBlocks(date)).sort(byStart);
     }
     var html = '<p class="ob-step">Your plan</p><h2>Here’s your plan, ' + esc(d.name || 'friend') + '</h2>' +
-      '<p class="lead">Built from your ideal days and your goals. Check it over. You can change any block later in the Plan tab.</p>' +
+      '<p class="lead">' + (OB.redo ? 'Built from your ideal days and your goals. Check it over. You can change any block later in the Plan tab.' :
+        'Built from a standard 8-to-5 workday and your goals. Check it over. You can change any block later in the Plan tab.') + '</p>' +
       '<div class="notebox">' + res.notes.map(function (n) { return '<p>' + esc(n) + '</p>'; }).join('') + '</div>';
     if (res.shortfalls.length) {
-      html += '<div class="warnbox"><b>Some goals didn’t fit.</b> Go back and leave more free time in your ideal days, or add these yourself later.' +
+      html += '<div class="warnbox"><b>Some goals didn’t fit.</b> ' + (OB.redo ? 'Go back and leave more free time in your ideal days, or add these yourself later.' : 'Add these yourself later in the Plan tab.') +
         '<ul>' + res.shortfalls.slice(0, 6).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
     }
     if (m) {

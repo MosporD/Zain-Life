@@ -976,18 +976,24 @@
   function pushWidget() {
     var n = NP();
     if (!n || !L.st().profile) return;
-    var t = today(), days = {}, done = {};
+    var t = today(), days = {}, done = {}, prayers = {};
     [t, addDays(t, 1)].forEach(function (d) {
       var k = dateKey(d), rec = L.peekDay(k);
-      days[k] = L.blocksForDate(d).filter(function (b) { return b.title !== 'Free time'; })
-        .map(function (b) { return { id: b.id, s: toMin(b.start), e: toMin(b.end) <= toMin(b.start) ? 1440 : toMin(b.end), t: window.I18N ? I18N.str(b.title) : b.title }; });
+      var tr = function (x) { return window.I18N ? I18N.str(x) : x; };
+      days[k] = L.blocksForDate(d).filter(function (b) { return b.title !== 'Free time' && !b.prayer; })
+        .map(function (b) { return { id: b.id, s: toMin(b.start), e: toMin(b.end) <= toMin(b.start) ? 1440 : toMin(b.end), t: tr(b.title) }; });
+      prayers[k] = L.prayerBlocks(d).map(function (p) { return { t: tr(p.title), s: toMin(p.start) }; });
       done[k] = Object.keys(rec.done || {}).filter(function (id) { return rec.done[id]; });
     });
     var ar = L.st().settings.lang === 'ar';
-    var labels = ar ? { now: 'الآن', done: 'الآن · تمّ', next: 'التالي', until: 'حتى', tomorrow: 'غدًا', open: 'وقت حر', nothing: 'لا شيء مخطط', dayDone: 'انتهى اليوم', ready: 'خطة الغد جاهزة', am: 'ص', pm: 'م' } : null;
-    n.setWidget({ data: JSON.stringify({ days: days, done: done, labels: labels }) }).catch(function () {});
+    var labels = ar ? { now: 'الآن', done: 'الآن · تمّ', next: 'التالي', until: 'حتى', tomorrow: 'غدًا', open: 'وقت حر', nothing: 'لا شيء مخطط', dayDone: 'انتهى اليوم', ready: 'خطة الغد جاهزة', am: 'ص', pm: 'م',
+      prayer: 'الصلاة', meeting: 'اجتماع', meetingNow: 'اجتماع الآن' } : null;
+    // Next meetings come from the Work tab's phone-calendar read (times in ms, so they cross midnight cleanly).
+    var meetings = window.ZLWork && ZLWork.upcoming ? ZLWork.upcoming(4) : [];
+    n.setWidget({ data: JSON.stringify({ days: days, done: done, prayers: prayers, meetings: meetings, labels: labels }) }).catch(function () {});
   }
   function pushWidgetSoon() { clearTimeout(widgetTimer); widgetTimer = setTimeout(pushWidget, 1500); }
+  window.ZLWidget = { refresh: pushWidgetSoon };
   // Tasks ticked on the widget are held natively until the app opens, then applied here.
   function pullWidgetDone() {
     var n = NP();

@@ -45,6 +45,7 @@
       if (!cal.granted) return;
       return n.calendarEvents({ days: 2 }).then(function (res) {
         cal.events = (res && res.events) || []; cal.loadedAt = Date.now(); cal.error = '';
+        if (window.ZLWidget) ZLWidget.refresh();
       });
     }).catch(function (e) { cal.error = (e && e.message) || 'error'; }).then(rerender);
   }
@@ -376,6 +377,13 @@
     }).join('') + '</ul></section>';
     return out;
   });
+  // For the home-screen widget: the next few timed meetings that haven't ended.
+  window.ZLWork = { upcoming: function (n) {
+    if (!cal.granted || !cal.events) return [];
+    var now = Date.now();
+    return cal.events.filter(function (e) { return !e.allDay && e.end > now; }).sort(function (a, b) { return a.begin - b.begin; })
+      .slice(0, n || 3).map(function (e) { return { t: e.title || '(No title)', b: e.begin, e: e.end }; });
+  } };
   A['job-go'] = function () { L.setTab('work'); };
   H.resume.push(function () { if (cal.granted) loadCalendar(true); });
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { loadCalendar(false); }, 3000); });

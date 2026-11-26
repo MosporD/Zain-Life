@@ -28,3 +28,6 @@ android/app/src/main/assets/public/
 Thumbs.db
 .idea/
 .vscode/
+
+# Release signing (password + key path)
+android/keystore.properties

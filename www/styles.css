@@ -639,3 +639,8 @@ input[type=text]:focus, input[type=number]:focus, input[type=date]:focus, input[
   .haze { animation-duration: .01s; }
   .btn:active, .chip:active, #drawer button:active { transform: none; }
 }
+
+/* Settings: one group per tab */
+.setgroups { margin: 2px 0 16px; padding: 4px 0 6px; }
+.setgroups .chip { flex: 0 0 auto; }
+.job-setup .lbl { display: block; }

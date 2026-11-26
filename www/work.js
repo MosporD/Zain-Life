@@ -101,7 +101,7 @@
     return '<section><div class="card job-head"><div class="job-hrow"><span><span class="lbl">' + (wb.length ? 'Work today' : 'No work planned today') + '</span>' +
       (hours ? '<b class="job-hours">' + esc(hours) + '</b>' : '') + '</span>' +
       '<span class="job-logged"><b>' + esc(fmtDur(minsLogged(todayKey()))) + '</b><span class="muted small">logged</span></span></div>' +
-      '<div class="row-btns"><button class="btn" data-act="ft-open" data-title="Work">Focus now</button></div></div></section>';
+      '<div class="row-btns"><button class="btn" data-act="ft-open" data-title="Work">Focus now</button>' + (W().hoursSet && readHours() ? '<button class="btn ghost" data-act="job-hrs-open">Work hours</button>' : '') + '</div></div></section>';
   }
 
   /* ---------------- tasks ---------------- */
@@ -258,7 +258,85 @@
   };
 
   /* ---------------- tab ---------------- */
-  function renderWork() { W(); return headerCard() + meetingsSection() + tasksSection() + timeSection(); }
+  /* ---------------- work hours (set by the person, not everyone works 8 to 5) ---------------- */
+  // The plan is built from the hour-by-hour workday grid, so changing hours repaints the "work"
+  // cells there and rebuilds the workday templates. Weekend templates are kept unless work days change.
+  function grids() { var p = L.st().profile; return p && p.grids && (p.grids.idealWork || p.grids.curWork) ? p.grids : null; }
+  function cellVal(g, h, q) { var c = g.cells || {}; return g.split && g.split[h] ? c[h + ':' + q] : c[h]; }
+  function readHours() {
+    var G = grids(); if (!G) return null;
+    var g = G.idealWork || G.curWork, first = null, last = null;
+    for (var h = g.wake; h < g.sleep; h++) for (var q = 0; q < 4; q++) {
+      if (cellVal(g, h, q) === 'work') { var m = h * 60 + q * 15; if (first == null) first = m; last = m + 15; }
+    }
+    return { start: first == null ? 480 : first, end: last == null ? 1020 : last, days: (L.st().profile.workDays || []).slice() };
+  }
+  function paintWork(g, s, e) {
+    g.cells = g.cells || {}; g.split = g.split || {};
+    Object.keys(g.cells).forEach(function (k) { if (g.cells[k] === 'work') delete g.cells[k]; });
+    for (var h = Math.floor(s / 60); h * 60 < e; h++) {
+      if (h * 60 >= s && h * 60 + 60 <= e && !g.split[h]) { g.cells[h] = 'work'; continue; }
+      if (!g.split[h]) { var v = g.cells[h]; delete g.cells[h]; g.split[h] = true; for (var i = 0; i < 4; i++) if (v) g.cells[h + ':' + i] = v; }
+      for (var q = 0; q < 4; q++) { var m = h * 60 + q * 15; if (m >= s && m < e) g.cells[h + ':' + q] = 'work'; }
+    }
+    g.wake = Math.min(g.wake, Math.floor(s / 60));
+    g.sleep = Math.max(g.sleep, Math.ceil(e / 60));
+  }
+  function daysText(days) { return days.length ? days.slice().sort().map(function (d) { return L.DAYS[d]; }).join(', ') : 'No work days'; }
+  function hoursText(h) { return fmt12(L.minToT(h.start)) + ' – ' + fmt12(L.minToT(h.end)); }
+  function hoursForm(h, inSheet) {
+    return '<div class="job-hrs" data-sheet="' + (inSheet ? 1 : 0) + '"><div class="two">' +
+      '<label class="field"><span>Starts</span><input type="time" step="900" class="job-hrs-s" value="' + L.minToT(h.start) + '"></label>' +
+      '<label class="field"><span>Ends</span><input type="time" step="900" class="job-hrs-e" value="' + L.minToT(h.end % 1440) + '"></label></div>' +
+      '<p class="flabel" style="margin-top:14px">Work days</p><div class="choice">' + L.DAYS.map(function (n, i) {
+        var on = h.days.indexOf(i) >= 0;
+        return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-act="job-hrs-day" data-v="' + i + '" aria-pressed="' + on + '">' + n + '</button>';
+      }).join('') + '</div>' +
+      '<p class="muted small" style="margin-top:12px">Your plan is rebuilt around these hours. Changes you made by hand to workdays in the Plan tab are replaced.</p>' +
+      '<div class="row-btns"><button class="btn" data-act="job-hrs-save">Save hours</button>' + (inSheet ? '<button class="btn ghost" data-act="close-sheet">Cancel</button>' : '') + '</div></div>';
+  }
+  function setupCard() {
+    var h = readHours();
+    if (!h || W().hoursSet) return '';
+    return '<section><div class="card job-setup"><span class="lbl">Set your work hours</span>' +
+      '<p class="muted small" style="margin-top:6px">Not everyone works 8 to 5. Set your hours and your plan moves around them.</p>' + hoursForm(h, false) + '</div></section>';
+  }
+  function openHours() {
+    var h = readHours();
+    if (!h) { toast('Redo setup in Settings first, then set your work hours.'); return; }
+    L.openSheet('<h3>Work hours</h3>' + hoursForm(h, true));
+  }
+  A['job-hrs-open'] = openHours;
+  A['job-hrs-day'] = function (el) { var on = !el.classList.contains('on'); el.classList.toggle('on', on); el.setAttribute('aria-pressed', on); };
+  A['job-hrs-save'] = function (el) {
+    var box = el.closest('.job-hrs'), st = L.st(), p = st.profile;
+    var s = toMin(box.querySelector('.job-hrs-s').value || ''), e = toMin(box.querySelector('.job-hrs-e').value || '');
+    if (isNaN(s) || isNaN(e)) { toast('Enter a start and an end time.'); return; }
+    s = Math.round(s / 15) * 15; e = Math.round(e / 15) * 15;
+    if (e === 0) e = 1440;
+    if (e <= s) { toast('Pick an end time after the start time. Overnight shifts aren’t supported yet.'); return; }
+    if (e - s > 16 * 60) { toast('That’s more than 16 hours. Check the times.'); return; }
+    var days = [].map.call(box.querySelectorAll('[data-act="job-hrs-day"].on'), function (b) { return +b.getAttribute('data-v'); }).sort();
+    var oldDays = (p.workDays || []).slice().sort().join(), G = p.grids;
+    if (!G.idealWork) G.idealWork = L.clone(G.curWork);
+    if (!G.idealWeekend && G.curWeekend) G.idealWeekend = L.clone(G.curWeekend);
+    ['curWork', 'idealWork'].forEach(function (k) { if (G[k]) paintWork(G[k], s, e); });
+    p.workDays = days;
+    var res = window.Planner.buildTemplates(p, st.settings.limit), same = days.join() === oldDays;
+    st.templates = st.templates || {};
+    for (var d = 0; d < 7; d++) if (!same || days.indexOf(d) >= 0) st.templates[d] = res.templates[d];
+    W().hoursSet = true;
+    L.save(); if (L.sheetOpen()) L.closeSheet(); L.queueReschedule(); L.render();
+    toast('Work hours saved');
+  };
+  H.settings.push(function (group) {
+    if (group !== 'work') return '';
+    var h = readHours(); if (!h) return '<section><div class="card"><p class="muted small">Run setup first to set your work hours.</p></div></section>';
+    return '<section><h2>Work</h2><div class="card"><div class="setrow"><span><span class="st">Work hours</span><br><span class="sd">' +
+      esc(hoursText(h)) + ' · ' + esc(daysText(h.days)) + '</span></span><button class="btn ghost" data-act="job-hrs-open">Change</button></div></div></section>';
+  });
+
+  function renderWork() { W(); return setupCard() + headerCard() + meetingsSection() + tasksSection() + timeSection(); }
   L.TABS.work = ['Work', renderWork];
 
   // Today tab: a one-line reminder of the next meeting, when calendar access is on.

@@ -16,5 +16,12 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0"
+  },
+  "overrides": {
+    "@capacitor/cli": {
+      "rimraf": {
+        "glob": "^14.0.6"
+      }
+    }
   }
 }

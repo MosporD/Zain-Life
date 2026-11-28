@@ -5,16 +5,23 @@ apply plugin: 'com.android.application'
 def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
 def appVersionCode = appVersion.tokenize('.').collect { it as int }.with { it[0] * 10000 + it[1] * 100 + it[2] }
 
-// Release signing reads android/keystore.properties (never committed). build-apk.ps1 -Release creates it.
-def keystoreProps = new Properties()
-def keystorePropsFile = file('../keystore.properties')
-if (keystorePropsFile.exists()) { keystorePropsFile.withInputStream { keystoreProps.load(it) } }
+// One app per brand (brands/<id>/brand.json): Zain Life and the personal app. Each is a product flavor
+// with its own app id, so both can sit on the same phone. build-apk.ps1 -Brand <id> picks one.
+def brands = file('../../brands').listFiles().findAll { new File(it, 'brand.json').exists() }
+    .sort { it.name }.collect { new groovy.json.JsonSlurper().parse(new File(it, 'brand.json')) }
+
+// Release signing: each brand has its own key. android/<key.props> (never committed) points at it;
+// build-apk.ps1 -Release creates both. Zain: keystore.properties, personal: keystore-personal.properties.
+def brandKeys = [:]
+brands.each { b ->
+    def f = file("../${b.key.props}")
+    if (f.exists()) { def p = new Properties(); f.withInputStream { p.load(it) }; brandKeys[b.id] = p }
+}
 
 android {
     namespace = "com.personal.lifeplanner"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.zainlife.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
@@ -27,18 +34,32 @@ android {
         }
     }
     signingConfigs {
-        release {
-            if (keystorePropsFile.exists()) {
-                storeFile file(keystoreProps['storeFile'])
-                storePassword keystoreProps['storePassword']
-                keyAlias keystoreProps['keyAlias']
-                keyPassword keystoreProps['keyPassword']
+        brandKeys.each { id, p ->
+            create(id) {
+                storeFile file(p['storeFile'])
+                storePassword p['storePassword']
+                keyAlias p['keyAlias']
+                keyPassword p['keyPassword']
             }
         }
     }
+    flavorDimensions = ['brand']
+    productFlavors {
+        brands.each { b ->
+            create(b.id) {
+                dimension = 'brand'
+                applicationId = b.appId
+                // Release builds use the brand's key; debug builds keep the PC's debug key.
+                if (brandKeys[b.id]) { signingConfig = signingConfigs.getByName(b.id) }
+            }
+        }
+    }
+    // Release builds would first run a "lint vital" check that downloads Capacitor's unit-test libraries
+    // (mockito, hamcrest...) from Maven Central. Some company networks block those .jar files and none of
+    // them end up in the APK, so skip it. Run '.\gradlew lintZainRelease' in android\ to lint by hand.
+    lint { checkReleaseBuilds = false }
     buildTypes {
         release {
-            if (keystorePropsFile.exists()) { signingConfig signingConfigs.release }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -57,6 +78,8 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Nutrition label scanning: on-device text recognition, model bundled in the APK (works offline).
+    implementation "com.google.mlkit:text-recognition:16.0.1"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

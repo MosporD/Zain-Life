@@ -22,6 +22,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.zainlife.app" android:host="auth" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -45,13 +52,14 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
-            <receiver android:name=".PlannerWidget" android:exported="false" android:label="Zain Life">
+            <receiver android:name=".PlannerWidget" android:exported="false" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/planner_widget_info" />
         </receiver>
         <service android:name=".ChallengeService" android:exported="false" android:foregroundServiceType="location" />
+        <receiver android:name=".FocusGuard" android:exported="false" />
     </application>
 
     <!-- Permissions -->
@@ -71,4 +79,5 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 </manifest>

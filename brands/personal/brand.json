@@ -1,0 +1,17 @@
+{
+  "id": "personal",
+  "name": "Life Planner",
+  "nameAr": "مخطط الحياة",
+  "short": "Life Planner",
+  "shortAr": "مخطط الحياة",
+  "appId": "com.lifeplanner.app",
+  "folder": "LifePlanner",
+  "apk": "LifePlanner.apk",
+  "background": "#0d2522",
+  "iconBackground": "#0f5f56",
+  "key": { "dir": ".lifeplanner", "file": "lifeplanner-release.jks", "alias": "lifeplanner", "props": "keystore-personal.properties" },
+  "features": { "challenge": false },
+  "drop": ["challenge.js"],
+  "mark": "M21.25,41.6l-2.9,-2.64C8.05,29.62 1.25,23.46 1.25,15.9 1.25,9.74 6.09,4.9 12.25,4.9c3.48,0 6.82,1.62 9,4.18C23.43,6.52 26.77,4.9 30.25,4.9 36.41,4.9 41.25,9.74 41.25,15.9c0,7.56 -6.8,13.72 -17.1,23.08L21.25,41.6z",
+  "marks": []
+}

@@ -10,6 +10,8 @@
   try { var s = JSON.parse(localStorage.getItem('lifeplanner.v1')); if (s && s.settings && s.settings.theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); if (s && s.settings && s.settings.lang === 'ar') { document.documentElement.setAttribute('dir', 'rtl'); document.documentElement.setAttribute('lang', 'ar'); } } catch (e) {}
 </script>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="brand/zain/theme.css">
+<script src="brand.js"></script>
 </head>
 <body>
 <div id="splash" aria-hidden="true">
@@ -29,7 +31,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
     <div class="tb-text">
-      <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+      <img class="brand-logo" src="brand/zain/logo.svg" alt="Zain Life" onerror="this.remove()">
       <h1 id="tb-title">Dashboard</h1>
       <span id="tb-sub"></span>
     </div>
@@ -49,7 +51,7 @@
 <div id="drawer-bg" data-act="menu-close" hidden></div>
 <nav id="drawer" aria-label="Sections" aria-hidden="true">
   <div class="dr-head">
-    <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+    <img class="brand-logo" src="brand/zain/logo.svg" alt="Zain Life" onerror="this.remove()">
     <b>Zain Life</b>
   </div>
   <button data-tab="dashboard" aria-label="Dashboard">
@@ -64,13 +66,17 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
     <span>Plan</span>
   </button>
-  <button data-tab="macros" aria-label="Macros">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>
-    <span>Macros</span>
-  </button>
-  <button data-tab="health" aria-label="Health">
+  <button data-tab="health" aria-label="Physical health">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
-    <span>Health</span>
+    <span>Physical health</span>
+  </button>
+  <button data-tab="mental" aria-label="Mental health">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>
+    <span>Mental health</span>
+  </button>
+  <button data-tab="spiritual" aria-label="Spiritual health">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z"/></svg>
+    <span>Spiritual health</span>
   </button>
   <button data-tab="work" aria-label="Work">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>
@@ -103,20 +109,27 @@
 <div id="toast" role="status" hidden></div>
 
 <script src="util.js"></script>
+<script src="ms-config.js"></script>
 <script src="reminders.js"></script>
 <script src="prayer.js"></script>
 <script src="planner.js"></script>
 <script src="foods.js"></script>
+<script src="labelscan.js"></script>
 <script src="app.js"></script>
 <script src="life.js"></script>
 <script src="money.js"></script>
 <script src="work.js"></script>
 <script src="quick.js"></script>
 <script src="profile.js"></script>
+<script src="msauth.js"></script>
 <script src="challenge.js"></script>
 <script src="today.js"></script>
 <script src="ambience.js"></script>
+<script src="motion.js"></script>
 <script src="ar.js"></script>
+<script src="tips.js"></script>
+<script src="wellbeing.js"></script>
+<script src="mindsoul.js"></script>
 <script src="i18n.js"></script>
 </body>
 </html>

@@ -24,7 +24,7 @@ public class UsageWatchPlugin extends Plugin {
         call.resolve(r);
     }
 
-    /** Opens Android's "Usage access" list, where the person switches Zain Life on. */
+    /** Opens Android's "Usage access" list, where the person switches this app on. */
     @PluginMethod
     public void openAccessSettings(PluginCall call) {
         Intent i = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

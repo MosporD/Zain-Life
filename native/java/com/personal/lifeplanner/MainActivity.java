@@ -9,6 +9,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(UsageWatchPlugin.class);   // app-local plugins: must be registered before super.onCreate
         registerPlugin(LifeNativePlugin.class);
+        registerPlugin(LabelScanPlugin.class);  // nutrition label scanning
+        registerPlugin(MsAuthPlugin.class);
         super.onCreate(savedInstanceState);
         // Back button: the app closes the menu or sheet, or returns to the Dashboard; only on the Dashboard does it leave.
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {

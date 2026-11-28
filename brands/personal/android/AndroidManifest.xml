@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Personal brand: no company step challenge, so no GPS service and none of its permissions.
+     Merged over android/app/src/main/AndroidManifest.xml; tools:node="remove" takes entries out. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove" />
+    <uses-feature android:name="android.hardware.location.gps" tools:node="remove" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" tools:node="remove" />
+    <application>
+        <service android:name=".ChallengeService" tools:node="remove" />
+    </application>
+</manifest>

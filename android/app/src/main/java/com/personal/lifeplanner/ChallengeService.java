@@ -122,10 +122,10 @@ public class ChallengeService extends Service implements SensorEventListener, Lo
         if (s == null) s = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (s == null) { note("error", "This phone has no step counter."); stopSelf(); return; }
         sensorOn = sm.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL, 10_000_000);
-        if (!sensorOn) { note("error", "Could not read the step counter. Allow Physical activity for Zain Life."); stopSelf(); return; }
+        if (!sensorOn) { note("error", "Could not read the step counter. Allow Physical activity for " + getString(R.string.app_name) + "."); stopSelf(); return; }
         if (!wakeUp) {
             PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ZainLife:challenge");
+            wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "app:challenge");
             wake.acquire(Math.max(60_000, prefs(this).getLong("end", 0) - System.currentTimeMillis()));
         }
         note("error", null);
@@ -274,7 +274,7 @@ public class ChallengeService extends Service implements SensorEventListener, Lo
         PendingIntent pi = open == null ? null : PendingIntent.getActivity(this, 7301, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         String name = prefs(this).getString("name", "Step challenge");
         return new NotificationCompat.Builder(this, CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_heart)
+            .setSmallIcon(R.drawable.ic_stat_app)
             .setContentTitle(name + ": " + String.format(Locale.US, "%,d", moving) + " verified steps today")
             .setContentText("Location is checked only while you walk.")
             .setContentIntent(pi)

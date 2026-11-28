@@ -30,4 +30,4 @@ Thumbs.db
 .vscode/
 
 # Release signing (password + key path)
-android/keystore.properties
+android/keystore*.properties

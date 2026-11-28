@@ -1569,8 +1569,8 @@
     channelsReady = Promise.all([
       ln.createChannel({ id: 'tasks', name: 'Task reminders', description: '5 minutes before and when each task starts', importance: 4, visibility: 1, vibration: true, lights: true }),
       ln.createChannel({ id: 'prayers', name: 'Prayer reminders', description: '5 minutes before and at each prayer time', importance: 4, visibility: 1, vibration: true, lights: true }),
-      // Tips are gentle: they sound once but don't pop up over the screen.
-      ln.createChannel({ id: 'wellbeing', name: 'Wellbeing tips', description: 'Short mind and body tips through the day', importance: 3, visibility: 1, vibration: false }),
+      // Tips pop up over the screen like task reminders (heads-up), with sound and a short vibration.
+      ln.createChannel({ id: 'tips', name: 'Wellbeing tips', description: 'Short mind and body tips through the day', importance: 4, visibility: 1, vibration: true, lights: true }),
       // "Mark done" button on the "· now" notification, so tasks can be ticked without opening the app.
       ln.registerActionTypes({ types: [{ id: 'TASK', actions: [{ id: 'done', title: 'Mark done' }] }] })
     ]).catch(function (e) { channelsReady = null; console.warn('channels', e); });

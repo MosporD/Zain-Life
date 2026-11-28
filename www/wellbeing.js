@@ -124,6 +124,8 @@
       sw('wb-body', w.body, 'Body tips', 'Posture, stretches, eyes, water, sleep') +
       '<div class="setrow wb-per"><span><span class="st">Tip reminders</span><br><span class="sd">' + (native ? 'Body tips come during work hours, mind tips in the evening. Never while you sleep, pray or focus.' : 'Works in the installed app') + '</span></span></div>' +
       '<div class="chips wb-chips">' + chips + '</div>' +
+      (native ? '<div class="setrow"><span><span class="st">Test it</span><br><span class="sd">A tip pops up in 5 seconds. Lock the phone or switch apps to see it.</span></span>' +
+        '<button class="btn ghost" data-act="wb-test">Send a test tip</button></div>' : '') +
       '<p class="muted small" style="margin-top:10px">Food and water tips pause while you fast in Ramadan. General habits, not medical advice.</p>' +
       '</div></section>';
   });
@@ -134,6 +136,21 @@
       L.save(); L.render(); L.reschedule();
       L.toast(v ? 'Tip reminders on' : 'Tip reminders off');
     });
+  };
+  // A sample tip notification in 5 seconds, in the same channel and wording as the real ones.
+  A['wb-test'] = function () {
+    var ln = L.LN();
+    if (!ln) return;
+    L.enableReminders().then(function (ok) {
+      if (!ok) return;
+      var w = W(), d = L.today(), cat = T.catFor(d, w, 0) || 'body';
+      var t = T.pick({ cat: cat, atWork: true, evening: false, fasting: false }, d, 1);
+      var tr = window.I18N ? I18N.str : function (s) { return s; };
+      return L.ensureChannels(ln).then(function () {
+        return ln.schedule({ notifications: [{ id: 7099, channelId: 'tips', title: tr(cat === 'mind' ? 'A minute for your mind' : 'A minute for your body'),
+          body: tr(t.title + ' · ' + t.text), extra: { type: 'tip', tip: t.id, date: L.todayKey() }, schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true } }] });
+      }).then(function () { L.toast('Test tip in 5 seconds'); });
+    }).catch(function () { L.toast('Could not send the test'); });
   };
   document.addEventListener('change', function (e) {
     var t = e.target, key = { 'wb-card': 'card', 'wb-mind': 'mind', 'wb-body': 'body' }[t.id];

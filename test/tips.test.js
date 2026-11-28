@@ -50,7 +50,7 @@ const start = new Date(2026, 10, 29), now = start.getTime();
 const list = T.build({ start, now, perDay: 2, mind: true, body: true, blocksFor: () => work });
 assert.strictEqual(list.length, 14);
 assert.strictEqual(new Set(list.map(n => n.id)).size, 14);
-assert(list.every(n => n.id >= 7000 && n.id < 7035 && n.channelId === 'wellbeing' && n.extra.type === 'tip'));
+assert(list.every(n => n.id >= 7000 && n.id < 7035 && n.channelId === 'tips' && n.extra.type === 'tip'));
 const day0 = list.filter(n => n.extra.date === '2026-11-29');
 const h = n => n.schedule.at.getHours() * 60 + n.schedule.at.getMinutes();
 assert(h(day0[0]) > 480 && h(day0[0]) < 1020 && day0[0].title === 'A minute for your body');

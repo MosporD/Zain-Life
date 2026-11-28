@@ -121,7 +121,8 @@
     'Food and water tips pause while you fast in Ramadan.': 'نصائح الأكل والماء تتوقف أثناء الصيام في رمضان.',
     'General habits, not medical advice.': 'عادات عامة، وليست نصيحة طبية.',
     'Tip reminders on': 'تذكير النصائح مفعّل', 'Tip reminders off': 'تذكير النصائح متوقف',
-    'Tips done': 'نصائح منجزة',
+    'Tips done': 'نصائح منجزة', 'Send a test tip': 'أرسل نصيحة تجريبية', 'Test tip in 5 seconds': 'نصيحة تجريبية خلال 5 ثوانٍ',
+    'A tip pops up in 5 seconds. Lock the phone or switch apps to see it.': 'تظهر نصيحة خلال 5 ثوانٍ. اقفل الهاتف أو انتقل إلى تطبيق آخر لتراها.',
     'Tips hidden. Turn them back on in Settings > Health.': 'تم إخفاء النصائح. أعد تشغيلها من الإعدادات > الصحة.'
   };
   BANK.forEach(function (r) { AR[r[3]] = r[5]; AR[r[4]] = r[6]; AR[r[3] + ' · ' + r[4]] = r[5] + ' · ' + r[6]; });
@@ -228,7 +229,7 @@
         used[t.id] = 1;
         var at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(m / 60), m % 60);
         if (at.getTime() <= o.now + 30000) return;
-        list.push({ id: 7000 + off * 5 + i, channelId: 'wellbeing', title: cat === 'mind' ? 'A minute for your mind' : 'A minute for your body',
+        list.push({ id: 7000 + off * 5 + i, channelId: 'tips', title: cat === 'mind' ? 'A minute for your mind' : 'A minute for your body',
           body: t.title + ' · ' + t.text, extra: { type: 'tip', tip: t.id, date: dateKey(d) }, schedule: { at: at, allowWhileIdle: true } });
       });
     }

@@ -13,7 +13,7 @@ import android.os.Build;
 
 /**
  * Focus session guard: Do Not Disturb while a session runs, and screen pinning (lock task).
- * DND needs "Do Not Disturb access" (the person switches Zain Life on once in Android settings).
+ * DND needs "Do Not Disturb access" (the person switches this app on once in Android settings).
  * The receiver side turns DND back off at the session's end time, even if the app was closed.
  * We only ever undo our own change: if the person changed DND themselves mid-session, it is left alone.
  */

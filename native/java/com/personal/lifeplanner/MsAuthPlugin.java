@@ -19,13 +19,14 @@ import java.util.Iterator;
 /**
  * Microsoft sign-in helper: window.Capacitor.Plugins.MsAuth.
  * open() shows Microsoft's sign-in page in the phone's browser; when it finishes, Microsoft sends the
- * browser to com.zainlife.app://auth?code=..., Android hands that link back to this app and the
+ * browser to <app id>://auth?code=..., Android hands that link back to this app and the
  * "redirect" event carries it to JavaScript. request() makes the token and Graph calls from Java,
  * because Microsoft refuses token requests that come from a web page (the WebView sends an Origin).
  */
 @CapacitorPlugin(name = "MsAuth")
 public class MsAuthPlugin extends Plugin {
-    static final String SCHEME = "com.zainlife.app";
+    // The link scheme is the app id (com.zainlife.app, or the personal app's own), see AndroidManifest.xml.
+    private String scheme() { return getContext().getPackageName(); }
 
     @Override
     public void load() {
@@ -42,7 +43,7 @@ public class MsAuthPlugin extends Plugin {
 
     private boolean deliver(Intent intent) {
         Uri u = intent == null ? null : intent.getData();
-        if (u == null || !SCHEME.equals(u.getScheme()) || !"auth".equals(u.getHost())) return false;
+        if (u == null || !scheme().equals(u.getScheme()) || !"auth".equals(u.getHost())) return false;
         JSObject d = new JSObject();
         d.put("url", u.toString());
         notifyListeners("redirect", d, true);   // kept until JavaScript is listening

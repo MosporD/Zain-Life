@@ -231,7 +231,7 @@ public class LifeNativePlugin extends Plugin {
         call.resolve(r);
     }
 
-    /** Opens Android's "Do Not Disturb access" list, where the person switches Zain Life on (once). */
+    /** Opens Android's "Do Not Disturb access" list, where the person switches this app on (once). */
     @PluginMethod
     public void focusDndSettings(PluginCall call) {
         try {

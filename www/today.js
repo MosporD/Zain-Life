@@ -112,7 +112,7 @@
       remind = '<div class="card" style="margin-top:14px"><b>Get reminded of each task?</b><br><span class="muted small">5 minutes before, and when it starts.</span>' +
         '<div class="row-btns" style="margin-top:10px"><button class="btn" data-act="remind-yes">Turn on reminders</button><button class="btn ghost" data-act="remind-no">Not now</button></div></div>';
     }
-    return L.runHooks('todayTop', k, rec) + remind + nowSection(blocks, k) + planSection(blocks, k, rec) + nutritionSection(k, rec) +
+    return L.runHooks('todayTop', k, rec) + remind + nowSection(blocks, k) + L.runHooks('todayTip') + planSection(blocks, k, rec) + nutritionSection(k, rec) +
       sec('End of the day', '<button class="btn block report-btn" data-act="open-report">See today’s report</button>' +
         '<p class="flabel" style="margin-top:14px">End-of-day note</p><textarea id="note" data-field="note" data-date="' + k + '" placeholder="What went well, what got in the way, what is on your mind.">' + esc(rec.note || '') + '</textarea>');
   }

@@ -638,7 +638,9 @@ h2 { font-size: 1.06rem; }
   background: var(--grad); color: var(--accent-ink); box-shadow: var(--neu-out); transition: transform .12s ease, box-shadow .18s ease; }
 .fab svg { width: 28px; height: 28px; }
 .fab:active { transform: scale(.94); box-shadow: var(--neu-in); }
-body.ob .fab, body.drawer-open .fab, body.ob #tabbar, body.drawer-open #tabbar { display: none; }
+body.ob .fab, body.ob #tabbar { display: none; }
+/* Hidden, not removed, while the menu is open: removing them re-lays out the page in the same frame the menu starts to slide. */
+body.drawer-open .fab, body.drawer-open #tabbar { visibility: hidden; }
 main { padding-bottom: calc(120px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
 .qk-top .qk-new { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; font-size: 1rem; }
 .qk-new svg { width: 20px; height: 20px; }
@@ -730,6 +732,16 @@ body::before { content: ""; position: fixed; inset: -10%; z-index: -1; backgroun
 .sheet { border-radius: 28px 28px 0 0; border-bottom: 0; }
 #drawer { border-radius: 0 28px 28px 0; }
 [dir=rtl] #drawer { border-radius: 28px 0 0 28px; }
+/* Side menu: no live blur. A blurred panel that slides has to re-blur the whole screen behind it on every frame,
+   which is what made opening the menu stutter on phones. It sits on the dark scrim anyway, so a still, pre-mixed
+   fill that matches the frosted look is used instead, and the panel gets its own GPU layer for a smooth slide. */
+#drawer { -webkit-backdrop-filter: none; backdrop-filter: none; will-change: transform; contain: layout paint;
+  background: radial-gradient(70% 28% at 0% 4%, rgba(122, 77, 255, .28), transparent 70%),
+    linear-gradient(180deg, #3d3656 0%, #312c45 22%, #352f4b 52%, #2a2541 74%, #1f1d36 100%); }
+:root[data-theme="light"] #drawer {
+  background: radial-gradient(60% 30% at 0% 72%, rgba(255, 179, 230, .22), transparent 70%),
+    linear-gradient(180deg, #d0cfd5 0%, #c1c3c9 22%, #b7b7bf 52%, #a9abb2 80%, #a0a5ab 100%); }
+#drawer-bg { animation: fade .22s ease; }
 .ob-nav { border-radius: 24px 24px 0 0; border-bottom: 0; }
 #tabbar { border-radius: 32px; }
 .now { background: var(--lg-fill-hi); }

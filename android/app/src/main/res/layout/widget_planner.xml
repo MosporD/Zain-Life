@@ -1,74 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget: Now (with a tick) on top, then the next block, the next prayer and the next meeting. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/w_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:paddingStart="16dp"
-    android:paddingTop="10dp"
+    android:paddingTop="12dp"
     android:paddingEnd="12dp"
-    android:paddingBottom="10dp">
+    android:paddingBottom="12dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/w_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.1"
+                android:text="NOW"
+                android:textColor="#B3A4FF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/w_now"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/app_name"
+                android:textColor="#F3F0FF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/w_until"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="Open the app once to load your plan"
+                android:textColor="#BDB5E2"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/w_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NOW"
+            android:id="@+id/w_done"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/widget_btn"
+            android:contentDescription="Mark done"
+            android:gravity="center"
+            android:text="✓"
             android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/w_now"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="Zain Life"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/w_until"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="Open the app once to load your plan"
-            android:textColor="#9A9A9A"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/w_next"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text=""
-            android:textColor="#D6D6D6"
-            android:textSize="13sp" />
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView
-        android:id="@+id/w_done"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginStart="10dp"
-        android:background="@drawable/widget_btn"
-        android:contentDescription="Mark done"
-        android:gravity="center"
-        android:text="✓"
-        android:textColor="#0A1A2A"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+        android:id="@+id/w_next"
+        style="@style/WidgetLine"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/w_prayer"
+        style="@style/WidgetLine" />
+
+    <TextView
+        android:id="@+id/w_meeting"
+        style="@style/WidgetLine" />
 </LinearLayout>

@@ -52,7 +52,7 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
-            <receiver android:name=".PlannerWidget" android:exported="false" android:label="Zain Life">
+            <receiver android:name=".PlannerWidget" android:exported="false" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -25,7 +25,7 @@ import java.util.Iterator;
  */
 @CapacitorPlugin(name = "MsAuth")
 public class MsAuthPlugin extends Plugin {
-    // The link scheme is the app id (com.zainlife.app, or the personal app's own), see AndroidManifest.xml.
+    // The link scheme is this app's own id (each brand has its own), see AndroidManifest.xml.
     private String scheme() { return getContext().getPackageName(); }
 
     @Override

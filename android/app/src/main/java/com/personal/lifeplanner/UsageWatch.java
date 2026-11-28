@@ -165,7 +165,7 @@ public final class UsageWatch {
         Intent open = new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder b = new NotificationCompat.Builder(c, CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_swirl)
+            .setSmallIcon(R.drawable.ic_stat_app)
             .setColor(0xFFFFFFFF)
             .setContentTitle(title)
             .setContentText(body)

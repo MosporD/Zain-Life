@@ -10,6 +10,8 @@
   try { var s = JSON.parse(localStorage.getItem('lifeplanner.v1')); if (s && s.settings && s.settings.theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); if (s && s.settings && s.settings.lang === 'ar') { document.documentElement.setAttribute('dir', 'rtl'); document.documentElement.setAttribute('lang', 'ar'); } } catch (e) {}
 </script>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="brand/zain/theme.css">
+<script src="brand.js"></script>
 </head>
 <body>
 <div id="splash" aria-hidden="true">
@@ -29,7 +31,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
     <div class="tb-text">
-      <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+      <img class="brand-logo" src="brand/zain/logo.svg" alt="Zain Life" onerror="this.remove()">
       <h1 id="tb-title">Dashboard</h1>
       <span id="tb-sub"></span>
     </div>
@@ -49,7 +51,7 @@
 <div id="drawer-bg" data-act="menu-close" hidden></div>
 <nav id="drawer" aria-label="Sections" aria-hidden="true">
   <div class="dr-head">
-    <img class="brand-logo" src="brand/zain-logo.svg" alt="Zain" onerror="this.remove()">
+    <img class="brand-logo" src="brand/zain/logo.svg" alt="Zain Life" onerror="this.remove()">
     <b>Zain Life</b>
   </div>
   <button data-tab="dashboard" aria-label="Dashboard">

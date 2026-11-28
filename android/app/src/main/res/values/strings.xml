@@ -1,7 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
+<!-- app_name, package_name and the other brand strings come from android/app/src/<brand>/res/values/brand.xml,
+     written by tools/brand.js from brands/<brand>/brand.json. -->
 <resources>
-    <string name="app_name">Zain Life</string>
-    <string name="title_activity_main">Zain Life</string>
-    <string name="package_name">com.zainlife.app</string>
-    <string name="custom_url_scheme">com.zainlife.app</string>
 </resources>

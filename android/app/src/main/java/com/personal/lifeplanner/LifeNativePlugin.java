@@ -35,10 +35,10 @@ import org.json.JSONArray;
 )
 public class LifeNativePlugin extends Plugin {
 
-    /** {name, data}: writes a backup file to Downloads/ZainLife (kept after uninstalling the app). */
+    /** {name, data}: writes a backup file to Downloads/<brand folder> (kept after uninstalling the app). */
     @PluginMethod
     public void saveBackup(PluginCall call) {
-        String name = call.getString("name", "ZainLife-backup.json");
+        String name = call.getString("name", "backup.json");
         String data = call.getString("data", "");
         if (Build.VERSION.SDK_INT < 29) { call.reject("Backup files need Android 10 or newer"); return; }
         try {
@@ -46,7 +46,7 @@ public class LifeNativePlugin extends Plugin {
             ContentValues v = new ContentValues();
             v.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
             v.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
-            v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/ZainLife");
+            v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + getContext().getString(R.string.brand_folder));
             Uri uri = r.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
             if (uri == null) { call.reject("Could not create the file"); return; }
             try (OutputStream out = r.openOutputStream(uri)) {

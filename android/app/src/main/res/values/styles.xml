@@ -16,12 +16,23 @@
         <item name="android:navigationBarColor">@color/ic_launcher_background</item>
     </style>
 
-    <!-- Native launch screen: black + the Zain swirl, matching the app icon. -->
+    <!-- Native launch screen: the brand colour + the brand mark, matching the app icon (both from brands/<id>/android/res). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@color/ic_launcher_background</item>
         <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_swirl</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_app_mark</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+    </style>
+    <!-- One line of the home-screen widget (next block, prayer, meeting). -->
+    <style name="WidgetLine">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">#E4DFFF</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:visibility">gone</item>
     </style>
 </resources>
 

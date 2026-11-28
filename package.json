@@ -7,8 +7,10 @@
     "preview": "node dev-server.js",
     "sync": "cap sync android",
     "smoke": "node test/smoke.js",
-    "test": "node test/util.test.js && node test/reminders.test.js && node test/planner.test.js && node test/prayer.test.js && node test/challenge.test.js",
-    "test:java": "node test/java/run.js"
+    "test": "node test/util.test.js && node test/reminders.test.js && node test/planner.test.js && node test/prayer.test.js && node test/challenge.test.js && node test/brand.test.js",
+    "test:java": "node test/java/run.js",
+    "preview:personal": "node dev-server.js personal",
+    "brand:check": "node tools/brand.js check"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.6",

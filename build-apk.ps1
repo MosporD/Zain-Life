@@ -1,12 +1,21 @@
-# Builds ZainLife.apk from the www/ app.
+# Builds an app from the www/ code. One codebase, one app per brand (brands/<id>/brand.json):
+#   zain      Zain Life -> ZainLife.apk (the default)
+#   personal  the personal app with nothing Zain in it -> LifePlanner.apk (name set in brands\personal\brand.json)
 # Usage (PowerShell, from this folder):
-#   .\build-apk.ps1            test build, signed with this PC's debug key
-#   .\build-apk.ps1 -Release   shareable build, signed with your own release key (created on first run)
+#   .\build-apk.ps1                            Zain Life test build, signed with this PC's debug key
+#   .\build-apk.ps1 -Release                   Zain Life shareable build, signed with its release key
+#   .\build-apk.ps1 -Brand personal            personal app test build
+#   .\build-apk.ps1 -Brand personal -Release   personal app shareable build, signed with ITS OWN release key
 #   -Jdk <folder>             use a specific JDK 21+ (otherwise one is found automatically)
+# Each brand has its own app id, so both apps can be installed on the same phone side by side.
 # Bump "version" in package.json before every APK you share, or phones will refuse to update.
-param([switch]$Release, [string]$Jdk)
+param([switch]$Release, [string]$Jdk, [string]$Brand = 'zain')
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
+$brandFile = Join-Path $PSScriptRoot "brands\$Brand\brand.json"
+if (-not (Test-Path $brandFile)) { throw "No brand '$Brand'. Brands: $((Get-ChildItem (Join-Path $PSScriptRoot 'brands') -Directory).Name -join ', ')" }
+$B = Get-Content $brandFile -Raw -Encoding UTF8 | ConvertFrom-Json
+Write-Host "     App: $($B.name) ($($B.appId))" -ForegroundColor DarkGray
 
 # Java: Capacitor 8 needs JDK 21 or newer. Uses, in order: -Jdk <folder>, JAVA_HOME, Android Studio's
 # bundled Java, then any JDK installed under Program Files (Temurin, Microsoft, Zulu, Oracle).
@@ -111,7 +120,7 @@ if ($mx -notmatch 'READ_CALENDAR') {
 }
 # Home-screen widget.
 if ($mx -notmatch 'PlannerWidget') {
-  $w = "        <receiver android:name=`".PlannerWidget`" android:exported=`"false`" android:label=`"Zain Life`">`n" +
+  $w = "        <receiver android:name=`".PlannerWidget`" android:exported=`"false`" android:label=`"@string/app_name`">`n" +
        "            <intent-filter>`n" +
        "                <action android:name=`"android.appwidget.action.APPWIDGET_UPDATE`" />`n" +
        "            </intent-filter>`n" +
@@ -136,14 +145,15 @@ if ($mx -notmatch 'ChallengeService') {
   $svc = "        <service android:name=`".ChallengeService`" android:exported=`"false`" android:foregroundServiceType=`"location`" />`n"
   $mx = $mx -replace '</application>', ($svc + '    </application>')
 }
-# App name shown under the icon and on the widget.
-$mx = $mx -replace 'android:label="(Life Planner|Zainers Health)"', 'android:label="Zain Life"'
-$strings = Join-Path $PSScriptRoot 'android\app\src\main\res\values\strings.xml'
-$sx = [IO.File]::ReadAllText($strings) -replace '>(Life Planner|Zainers Health)<', '>Zain Life<'
-[IO.File]::WriteAllText($strings, $sx)
+# App name shown under the icon and on the widget comes from the brand (android\app\src\<brand>\res).
+$mx = $mx -replace 'android:label="(Life Planner|Zainers Health|Zain Life)"', 'android:label="@string/app_name"'
 [IO.File]::WriteAllText($manifest, $mx)
 # Native Java (usage watch plugin + MainActivity that registers it).
 Copy-Item (Join-Path $PSScriptRoot 'native\java\*') 'android\app\src\main\java' -Recurse -Force
+# Brand: rebrand the copied web app (name, logo, colours, left-out features), write the brand's name,
+# icon and colours into android\app\src\<brand>, and stop if another brand's text is still in there.
+node tools/brand.js android $Brand
+if ($LASTEXITCODE -ne 0) { throw "Branding for '$Brand' failed (see above)." }
 
 # If a copy of Gradle was placed in gradle-dist\ by hand, verify it and build from it instead of downloading.
 # Capacitor 8's Android Gradle plugin (8.13) needs Gradle 8.13 or newer.
@@ -167,19 +177,20 @@ $props = $props -replace '(?m)^networkTimeout=.*$', 'networkTimeout=120000'   # 
 # Release key: one file that proves every future update comes from you. Android only installs an
 # update signed with the same key, so if this file or its password is lost, everyone has to
 # uninstall and reinstall. Keep a copy somewhere safe (not only on this PC) and never commit it.
-$keyProps = Join-Path $PSScriptRoot 'android\keystore.properties'
+# Each brand has its own key (brands\<id>\brand.json "key"), so the personal app never shares Zain's key.
+$keyProps = Join-Path $PSScriptRoot "android\$($B.key.props)"
 if ($Release -and -not (Test-Path $keyProps)) {
-  $keyDir = Join-Path $env:USERPROFILE '.zainlife'
-  $keyFile = Join-Path $keyDir 'zainlife-release.jks'
+  $keyDir = Join-Path $env:USERPROFILE $B.key.dir
+  $keyFile = Join-Path $keyDir $B.key.file
   New-Item -ItemType Directory -Force $keyDir | Out-Null
   if (-not (Test-Path $keyFile)) {
-    Write-Host '     Creating your release key (one time).' -ForegroundColor Cyan
+    Write-Host "     Creating the $($B.name) release key (one time)." -ForegroundColor Cyan
     $sec = Read-Host 'Choose a password for the release key (at least 6 characters)' -AsSecureString
     $pw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
     if ($pw.Length -lt 6) { throw 'The password must be at least 6 characters.' }
     $ErrorActionPreference = 'Continue'   # keytool reports progress on stderr
-    & "$jbr\bin\keytool.exe" -genkeypair -noprompt -keystore $keyFile -alias zainlife -keyalg RSA -keysize 2048 `
-      -validity 10000 -storepass $pw -keypass $pw -dname 'CN=Zain Life'
+    & "$jbr\bin\keytool.exe" -genkeypair -noprompt -keystore $keyFile -alias $($B.key.alias) -keyalg RSA -keysize 2048 `
+      -validity 10000 -storepass $pw -keypass $pw -dname "CN=$($B.name)"
     $ErrorActionPreference = 'Stop'
     if (-not (Test-Path $keyFile)) { throw 'Could not create the release key.' }
     Write-Host "     Release key saved to $keyFile. Back it up now, with its password." -ForegroundColor Yellow
@@ -188,26 +199,26 @@ if ($Release -and -not (Test-Path $keyProps)) {
     $pw = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
   }
   $kf = $keyFile.Replace('\', '/')
-  "storeFile=$kf`nstorePassword=$pw`nkeyAlias=zainlife`nkeyPassword=$pw`n" | Set-Content -Encoding ascii $keyProps
+  "storeFile=$kf`nstorePassword=$pw`nkeyAlias=$($B.key.alias)`nkeyPassword=$pw`n" | Set-Content -Encoding ascii $keyProps
 }
 
-$task = if ($Release) { 'assembleRelease' } else { 'assembleDebug' }
-# Release builds normally run a "lint vital" check first, which resolves Capacitor's unit-test libraries
-# (mockito, hamcrest...) from Maven Central. Some company networks block those .jar downloads, and none of
-# them end up in the APK, so skip that check. Run '.\gradlew lintRelease' in android\ to lint by hand.
-$skip = if ($Release) { @('-x', 'lintVitalRelease') } else { @() }
+$type = if ($Release) { 'Release' } else { 'Debug' }
+$task = 'assemble' + $Brand.Substring(0, 1).ToUpper() + $Brand.Substring(1) + $type
+# The release "lint vital" check is switched off in android\app\build.gradle (it downloads test libraries
+# that some company networks block).
 Write-Host "2/3  Building the APK ($task; first run downloads Gradle, takes a few minutes)..." -ForegroundColor Cyan
 Push-Location android
 $ErrorActionPreference = 'Continue'   # Java prints "Picked up JAVA_TOOL_OPTIONS" on stderr; that is not an error
-.\gradlew.bat $task @skip --no-daemon
+.\gradlew.bat $task --no-daemon
 $code = $LASTEXITCODE
 $ErrorActionPreference = 'Stop'
 Pop-Location
 if ($code -ne 0) { throw 'Gradle build failed. Scroll up for the first error.' }
 
 Write-Host '3/3  Done.' -ForegroundColor Cyan
-$out = if ($Release) { 'android\app\build\outputs\apk\release\app-release.apk' } else { 'android\app\build\outputs\apk\debug\app-debug.apk' }
-if (-not (Test-Path $out)) { throw "Gradle finished but $out is missing. If this was -Release, check android\keystore.properties." }
-Copy-Item $out 'ZainLife.apk' -Force
-$apk = Resolve-Path 'ZainLife.apk'
+$t = $type.ToLower()
+$out = "android\app\build\outputs\apk\$Brand\$t\app-$Brand-$t.apk"
+if (-not (Test-Path $out)) { throw "Gradle finished but $out is missing. If this was -Release, check android\$($B.key.props)." }
+Copy-Item $out $B.apk -Force
+$apk = Resolve-Path $B.apk
 Write-Host "APK ready: $apk" -ForegroundColor Green

@@ -421,7 +421,6 @@ body.ob .ffab, body:has(#sheet-root .sheet) .ffab { display: none; }
 body.drawer-open .ffab { visibility: hidden; }
 main.v-dashboard { padding-bottom: calc(170px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
 @media (prefers-reduced-motion: reduce) { .ffab, .ffab.on svg { animation: none; } }
-.ft-guard { margin-top: 14px; }
 .ram { margin-top: 14px; background: color-mix(in srgb, var(--c-faith) 14%, var(--surface)); }
 .ph-cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 8px; }
 .ph-cmp figure { margin: 0; }

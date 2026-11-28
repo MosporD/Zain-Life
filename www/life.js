@@ -201,7 +201,8 @@
   }
   document.addEventListener('change', function (e) {
     var id = e.target.id;
-    if (id !== 'ft-dnd' && id !== 'fo-dnd' && id !== 'ft-pin' && id !== 'fo-pin') return;
+    if (id === 'fo-min') { L.st().settings.focusMin = +e.target.value; L.save(); return; }
+    if (id !== 'fo-dnd' && id !== 'fo-pin') return;
     var s = L.st().settings;
     if (/-dnd$/.test(id)) { s.focusDnd = e.target.checked; if (e.target.checked && !guard.dndAccess) askDndAccess(); }
     else s.focusPin = e.target.checked;
@@ -210,17 +211,21 @@
   A['fo-dnd-allow'] = askDndAccess;
   H.settings.push(function (group) {
     if (group !== 'focus') return '';
-    if (!NP()) return '<section><h2>During a focus session</h2><div class="card"><p class="muted small">Silencing notifications and pinning the app work in the installed app.</p></div></section>';
-    return '<section><h2>During a focus session</h2><div class="card">' + guardRows('fo') +
+    var len = '<label class="setrow"><span><span class="st">Session length</span><br><span class="sd">Used by the Focus button on the Dashboard</span></span><select id="fo-min" style="width:110px">' +
+      LENGTHS.map(function (m) { return '<option value="' + m + '"' + (m === defaultMin() ? ' selected' : '') + '>' + m + ' min</option>'; }).join('') + '</select></label>';
+    if (!NP()) return '<section><h2>Focus sessions</h2><div class="card">' + len + '<p class="muted small" style="margin-top:8px">Silencing notifications and pinning the app work in the installed app.</p></div></section>';
+    return '<section><h2>Focus sessions</h2><div class="card">' + len + guardRows('fo') +
       '<p class="muted small" style="margin-top:8px">Calls and alarms follow your phone’s own Do Not Disturb exceptions, for example starred contacts. To leave a pinned app early, hold Back and Overview, or swipe up and hold.</p>' +
       (guard.dndAccess ? '' : '<div class="row-btns"><button class="btn ghost" data-act="fo-dnd-allow">Allow Do Not Disturb access</button></div>') + '</div></section>';
   });
 
+  var LENGTHS = [25, 45, 60, 90];
+  function defaultMin() { var m = +L.st().settings.focusMin; return LENGTHS.indexOf(m) >= 0 ? m : 25; }
+  // From a plan block or the Work tab: one tap on a length starts it. Silencing and pinning are set in Settings › Focus.
   function openTimerSheet(title) {
-    L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '"></label>' +
-      '<p class="flabel" style="margin-top:14px">How long?</p><div class="choice">' + [25, 45, 60, 90].map(function (m) {
-        return '<button type="button" class="chip" data-act="ft-start" data-v="' + m + '">' + m + ' min</button>';
-      }).join('') + '</div>' + (NP() ? '<div class="ft-guard">' + guardRows('ft') + '</div>' : '') +
+    L.openSheet('<h3>Focus session</h3><p class="flabel" style="margin-top:6px">How long?</p><div class="choice">' + LENGTHS.map(function (m) {
+        return '<button type="button" class="chip' + (m === defaultMin() ? ' on' : '') + '" data-act="ft-start" data-v="' + m + '" data-title="' + esc(title || '') + '">' + m + ' min</button>';
+      }).join('') + '</div>' +
       '<p class="muted small" style="margin-top:10px">You’ll get a notification when it ends. The minutes go into your daily report and weekly review.</p>');
   }
   // While a session runs, the floating button opens this instead of starting a new one.
@@ -231,18 +236,19 @@
       '<div class="row-btns"><button class="btn" data-act="close-sheet">Keep going</button><button class="btn ghost" data-act="ft-stop">Stop and save</button></div>');
   }
   A['ft-open'] = function (el) { openTimerSheet(el.getAttribute('data-title') || ''); };
-  A['ft-fab'] = function () { if (timer() && timerLeft(timer()) > 0) openLiveSheet(); else openTimerSheet(''); };
-  A['ft-start'] = function (el) {
-    var title = (document.getElementById('ft-title').value || '').trim() || 'Focus';
-    var t = F().timer = { start: Date.now(), min: +el.getAttribute('data-v'), title: title, date: todayKey() };
-    var fromDash = L.tab() === 'dashboard';
-    L.save(); L.closeSheet();
-    if (fromDash) L.render(); else L.setTab('today');
+  function startSession(min, title) {
+    var t = F().timer = { start: Date.now(), min: min, title: title || 'Focus', date: todayKey() };
+    var stay = L.tab() === 'dashboard';
+    L.save(); if (L.sheetOpen()) L.closeSheet();
+    if (stay) L.render(); else L.setTab('today');
     L.reschedule();
     ensureTick(); paintFab();
     guardStart(t);
-    toast('Focus: ' + el.getAttribute('data-v') + ' minutes. Phone down.');
-  };
+    toast('Focus: ' + min + ' minutes. Phone down.');
+  }
+  // The floating button starts straight away with the length from Settings › Focus: no questions.
+  A['ft-fab'] = function () { if (timer() && timerLeft(timer()) > 0) openLiveSheet(); else startSession(defaultMin(), 'Focus'); };
+  A['ft-start'] = function (el) { startSession(+el.getAttribute('data-v'), el.getAttribute('data-title')); };
   A['ft-stop'] = function () { finishTimer(true); if (L.sheetOpen()) L.closeSheet(); L.render(); };
 
   /* ---------------- floating focus button (shown on the Dashboard only, see .ffab in styles.css) ---------------- */

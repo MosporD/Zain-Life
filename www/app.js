@@ -118,7 +118,7 @@
   }
   var state = load();
   // Extension points used by life.js (workouts, Ramadan, savings, widget...).
-  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [], nowExtra: [], reportExtra: [] };
+  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [], nowExtra: [], reportExtra: [], profileTop: [] };
   function runHooks(name) { var a = [].slice.call(arguments, 1), out = ''; HOOKS[name].forEach(function (f) { try { var r = f.apply(null, a); if (typeof r === 'string') out += r; } catch (e) { console.warn(name, e); } }); return out; }
   var saveFailed = false;
   function save() {

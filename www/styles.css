@@ -767,3 +767,12 @@ body:has(#sheet-root .sheet) .fab, body:has(#sheet-root .sheet) #tabbar { visibi
 body.noglass * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 body.noglass { --lg-fill: linear-gradient(145deg, var(--bg), var(--bg)); --lg-fill-hi: linear-gradient(145deg, var(--bg), var(--bg)); }
 @media (prefers-reduced-transparency: reduce) { * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; } }
+/* Microsoft account card (msauth.js). The four squares are drawn in CSS, no image file. */
+.ms-row { display: flex; align-items: center; gap: 12px; }
+.ms-who { display: flex; flex-direction: column; min-width: 0; }
+.ms-who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms-logo { display: inline-grid; grid-template-columns: 9px 9px; gap: 2px; flex: none; }
+.ms-logo i { width: 9px; height: 9px; display: block; }
+.ms-logo i:nth-child(1) { background: #f25022; } .ms-logo i:nth-child(2) { background: #7fba00; }
+.ms-logo i:nth-child(3) { background: #00a4ef; } .ms-logo i:nth-child(4) { background: #ffb900; }
+.ms-btn { display: inline-flex; align-items: center; gap: 10px; }

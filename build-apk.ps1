@@ -136,6 +136,16 @@ if ($mx -notmatch 'ChallengeService') {
   $svc = "        <service android:name=`".ChallengeService`" android:exported=`"false`" android:foregroundServiceType=`"location`" />`n"
   $mx = $mx -replace '</application>', ($svc + '    </application>')
 }
+# Microsoft sign-in: the browser returns to the app through com.zainlife.app://auth.
+if ($mx -notmatch 'com\.zainlife\.app" android:host="auth"') {
+  $ms = "            <intent-filter>`n" +
+        "                <action android:name=`"android.intent.action.VIEW`" />`n" +
+        "                <category android:name=`"android.intent.category.DEFAULT`" />`n" +
+        "                <category android:name=`"android.intent.category.BROWSABLE`" />`n" +
+        "                <data android:scheme=`"com.zainlife.app`" android:host=`"auth`" />`n" +
+        "            </intent-filter>`n"
+  $mx = ([regex]'(<category android:name="android.intent.category.LAUNCHER" />\s*</intent-filter>\s*)').Replace($mx, ('$1' + $ms), 1)
+}
 # App name shown under the icon and on the widget.
 $mx = $mx -replace 'android:label="(Life Planner|Zainers Health)"', 'android:label="Zain Life"'
 $strings = Join-Path $PSScriptRoot 'android\app\src\main\res\values\strings.xml'

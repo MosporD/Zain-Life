@@ -34,7 +34,7 @@
     var body = '<section><h2>Body and goals</h2><div class="card">' +
       '<div class="pf-facts"><span><b>' + esc(p.age || '–') + '</b>years</span><span><b>' + esc(p.height || '–') + '</b>cm</span><span><b>' + esc(L.latestWeight ? (L.latestWeight() || p.weight || '–') : (p.weight || '–')) + '</b>kg</span></div>' +
       '<div class="row-btns"><button class="btn ghost" data-act="redo-setup">Redo setup &amp; rebuild my plan</button></div></div></section>';
-    return head + form + body;
+    return head + L.runHooks('profileTop') + form + body;
   }
   L.TABS.profile = ['Profile', renderProfile];
 

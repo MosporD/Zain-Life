@@ -205,7 +205,7 @@
 
   var TABS = {
     dashboard: ['Dashboard', renderDashboard], today: ['Today', function () { return ''; }], plan: ['Plan', renderPlan], macros: ['Macros', renderMacros],
-    health: ['Health', renderHealth], focus: ['Focus', renderFocus], settings: ['Settings', renderSettings],
+    health: ['Physical health', renderHealth], mental: ['Mental health', renderMental], spiritual: ['Spiritual health', renderSpiritual], focus: ['Focus', renderFocus], settings: ['Settings', renderSettings],
     report: ['Daily report', renderReport]
   };
   function setTab(t) {
@@ -691,7 +691,7 @@
     var cur = latestWeight(), st = +state.settings.start, tg = +state.settings.target;
     if (cur && tg) {
       var total = Math.abs(st - tg) || 1, doneKg = Math.max(0, Math.min(total, Math.abs(st - cur) * (Math.sign(tg - st) === Math.sign(cur - st) ? 1 : 0)));
-      weight = '<button class="card dcard" data-tab="health" data-part="physical"><span class="lbl">Weight</span><div class="kcal" style="margin-top:4px"><span class="big">' + num1(cur) + '</span><span class="of">kg · goal ' + num1(tg) + ' kg</span></div>' +
+      weight = '<button class="card dcard" data-tab="health"><span class="lbl">Weight</span><div class="kcal" style="margin-top:4px"><span class="big">' + num1(cur) + '</span><span class="of">kg · goal ' + num1(tg) + ' kg</span></div>' +
         '<div class="track" style="margin-top:8px"><span style="width:' + (doneKg / total * 100).toFixed(1) + '%"></span></div>' +
         '<p class="muted small" style="margin-top:6px">' + (Math.abs(cur - tg) < 0.5 ? 'Goal reached' : num1(Math.abs(cur - tg)) + ' kg to go') + '</p></button>';
     }
@@ -1212,18 +1212,11 @@
     return html + '</div></section>';
   }
 
-  // Health is split in three: Physical (body, steps, food, training), Mental (mood, focus, mind)
-  // and Spiritual (faith, Ramadan, reflection). The chip row at the top switches between them.
-  var healthPart = 'physical';
-  var HEALTH_PARTS = [['physical', 'Physical'], ['mental', 'Mental'], ['spiritual', 'Spiritual']];
-  function renderHealth() {
-    var bar = '<div class="chips setgroups hparts" role="tablist">' + HEALTH_PARTS.map(function (g) {
-      return '<button type="button" role="tab" class="chip' + (healthPart === g[0] ? ' on' : '') + '" data-act="health-part" data-v="' + g[0] + '" aria-selected="' + (healthPart === g[0]) + '">' + g[1] + '</button>';
-    }).join('') + '</div>';
-    if (healthPart === 'mental') return bar + runHooks('healthMental');
-    if (healthPart === 'spiritual') return bar + runHooks('healthSpiritual');
-    return bar + physicalHealth();
-  }
+  // Health is three separate sections: Physical (this tab, id 'health'), Mental and Spiritual.
+  // Mental and Spiritual are filled by the healthMental / healthSpiritual hooks.
+  function renderHealth() { return physicalHealth(); }
+  function renderMental() { return runHooks('healthMental'); }
+  function renderSpiritual() { return runHooks('healthSpiritual'); }
   function physicalHealth() {
     var ws = sortedWeights();
     var hist = ws.slice().reverse().slice(0, 10).map(function (w, i, arr) {
@@ -1848,7 +1841,6 @@
     'theme': function (el) { state.settings.theme = el.getAttribute('data-v'); save(); applyTheme(); render(); },
     'export': exportData,
     'import': importData,
-    'health-part': function (el) { healthPart = el.getAttribute('data-v'); render(); window.scrollTo(0, 0); },
     'set-group': function (el) { setGroup = el.getAttribute('data-v'); render(); window.scrollTo(0, 0); },
     'reset-all': function () {
       openSheet('<h3>Erase everything?</h3>' +
@@ -1867,7 +1859,7 @@
   document.addEventListener('click', function (e) {
     var el = e.target.closest('[data-tab],[data-act]');
     if (!el) return;
-    if (el.hasAttribute('data-tab')) { if (el.hasAttribute('data-part')) healthPart = el.getAttribute('data-part'); setDrawer(false); setTab(el.getAttribute('data-tab')); return; }
+    if (el.hasAttribute('data-tab')) { setDrawer(false); setTab(el.getAttribute('data-tab')); return; }
     var fn = ACTIONS[el.getAttribute('data-act')];
     if (fn) fn(el, e);
   });
@@ -1979,7 +1971,7 @@
     dayRec: dayRec, peekDay: peekDay, displayList: displayList, blocksForDate: blocksForDate, prayerBlocks: prayerBlocks, accountable: accountable,
     hasGoal: hasGoal, weightGoal: weightGoal, latestWeight: latestWeight, totals: totals, activeHabits: activeHabits, reviewOf: reviewOf, REASONS: REASONS,
     LN: LN, enableReminders: enableReminders, ensureChannels: ensureChannels, queueReschedule: queueReschedule, reschedule: reschedule, statTile: statTile,
-    acc: acc, ul: ul, dayIni: dayIni, religion: religion, isMuslim: isMuslim, dashTile: dashTile, reportTimeFor: reportTimeFor, armed: armed, isTyping: isTyping, tab: function () { return tab; }, healthPart: function () { return healthPart; }, setHealthPart: function (p) { healthPart = p; }, sheetOpen: function () { return sheetOpen; },
+    acc: acc, ul: ul, dayIni: dayIni, religion: religion, isMuslim: isMuslim, dashTile: dashTile, reportTimeFor: reportTimeFor, armed: armed, isTyping: isTyping, tab: function () { return tab; }, sheetOpen: function () { return sheetOpen; },
     inSetup: function () { return !!OB; }, normalize: normalize, setState: function (s) { state = s; }, applyTheme: applyTheme, openReport: openReport
   };
 

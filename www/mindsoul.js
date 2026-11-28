@@ -1,4 +1,4 @@
-/* Health → Mental and Health → Spiritual.
+/* The Mental health and Spiritual health tabs.
    Mental: focus and screen time at a glance (the mood log comes from today.js) and short mind guides.
    Spiritual: faith time done this week (Faith and Ramadan come from life.js) and a one-line daily
    reflection, kept in the day record as `grat`. Arabic for the new text is merged into AR_DICT here. */
@@ -70,7 +70,7 @@
 
   /* ---------------- Arabic ---------------- */
   var AR = {
-    'Physical': 'الجسدية', 'Mental': 'النفسية', 'Spiritual': 'الروحية',
+    'Physical health': 'الصحة الجسدية', 'Mental health': 'الصحة النفسية', 'Spiritual health': 'الصحة الروحية',
     'Focus and screen time': 'التركيز ووقت الشاشة', 'Focused today': 'تركيز اليوم', 'Focused this week': 'تركيز الأسبوع',
     'Social media today': 'التواصل الاجتماعي اليوم', 'Urges beaten': 'رغبات تغلبت عليها', 'last 7 days': 'آخر 7 أيام', 'Open Focus': 'افتح التركيز',
     'Look after your mind': 'اعتنِ بعقلك', 'When stress builds up': 'عندما يتراكم التوتر', 'Sleep and your mood': 'النوم ومزاجك', 'Talk to someone': 'تحدّث مع أحد',

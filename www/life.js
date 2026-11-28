@@ -74,7 +74,7 @@
     var note = linked ? '' : native && hc && hc.available
       ? '<div class="row-btns" style="margin-top:10px"><button class="btn ghost" data-act="hc-connect">Connect to Samsung Health</button></div>'
       : '';
-    return '<section><div class="card steps-dash" data-tab="health" data-part="physical" role="button"><div class="ring-row">' + stepRing(steps, goal) + side + '</div></div>' + note + '</section>';
+    return '<section><div class="card steps-dash" data-tab="health" role="button"><div class="ring-row">' + stepRing(steps, goal) + side + '</div></div>' + note + '</section>';
   });
   L.waterGoal = waterGoal;      // the Today tab draws the water card
   H.dashTiles.push(function (k, rec) {
@@ -819,7 +819,7 @@
         '<span class="switch"><input type="checkbox" id="weekly-on"' + (F().weekly ? ' checked' : '') + '><span></span></span></label></div>') +
       holidaysSection() + peopleSection();
   }
-  // Faith and Ramadan live in Health → Spiritual.
+  // Faith and Ramadan live in the Spiritual health tab.
   H.healthSpiritual.push(function () { return L.isMuslim() ? faithSection() + sec('Ramadan', ramadanCard()) : ''; });
   L.TABS.life = ['Life', renderLife];
   L.lifeData = F;                   // shared with money.js
@@ -888,7 +888,7 @@
   });
   H.tap.push(function (x) {
     if (x.type === 'week') { weekOff = 0; L.setTab('life'); return true; }
-    if (x.type === 'athkar') { L.setHealthPart('spiritual'); L.setTab('health'); return true; }
+    if (x.type === 'athkar') { L.setTab('spiritual'); return true; }
     if (x.type === 'focus') { L.setTab('focus'); return true; }
     if (x.type === 'ramadan' || x.type === 'focus') { L.setTab('today'); return true; }
     return false;

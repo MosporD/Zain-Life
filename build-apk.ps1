@@ -1,6 +1,6 @@
 # Builds an app from the www/ code. One codebase, one app per brand (brands/<id>/brand.json):
 #   zain      Zain Life -> ZainLife.apk (the default)
-#   personal  the personal app with nothing Zain in it -> LifePlanner.apk (name set in brands\personal\brand.json)
+#   personal  the personal app with nothing Zain in it -> MyLifePlanner.apk (name set in brands\personal\brand.json)
 # Usage (PowerShell, from this folder):
 #   .\build-apk.ps1                            Zain Life test build, signed with this PC's debug key
 #   .\build-apk.ps1 -Release                   Zain Life shareable build, signed with its release key

@@ -1,5 +1,5 @@
 # Builds test APKs of both apps (Zain Life and MyLifePlanner) on GitHub's servers.
-# Download them from the run's "Artifacts" box. These are debug builds signed with a key made for
+# Download them from the "test-build" pre-release on GitHub (or the run's "Artifacts" box). These are debug builds signed with a key made for
 # that run, so they do not install over an APK built on the PC (uninstall that one first).
 name: Android test APKs
 on:
@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # to put the APKs on the "test-build" pre-release
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +42,12 @@ jobs:
           name: apks
           path: out/*.apk
           retention-days: 14
+      - name: Put the APKs on the test-build pre-release
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete test-build --yes --cleanup-tag 2>/dev/null || true
+          gh release create test-build out/*.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Test build ($(node -p "require('./package.json').version"), ${GITHUB_SHA::7})" \
+            --notes "Debug test APKs built by GitHub Actions from ${GITHUB_SHA}. Signed with a throwaway key: uninstall a PC-built Zain Life first."

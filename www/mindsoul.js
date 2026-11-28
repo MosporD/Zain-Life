@@ -1,4 +1,4 @@
-/* The Mental health and Spiritual health tabs.
+/* The Mental health and Spiritual health tabs (plus the Arabic for the Food section of Physical health).
    Mental: focus and screen time at a glance (the mood log comes from today.js) and short mind guides.
    Spiritual: faith time done this week (Faith and Ramadan come from life.js) and a one-line daily
    reflection, kept in the day record as `grat`. Arabic for the new text is merged into AR_DICT here. */
@@ -84,7 +84,18 @@
     'If you have felt low for more than two weeks, talk to a doctor. It is a health check like any other.': 'إذا شعرت بالإحباط لأكثر من أسبوعين، تحدّث مع طبيب. إنه فحص صحي مثل أي فحص آخر.',
     'Faith time this week': 'وقت العبادة هذا الأسبوع', 'faith blocks done in your plan': 'من أوقات العبادة في خطتك منجزة',
     'Reflection': 'تأمّل', 'One good thing about today': 'شيء جميل حدث اليوم', 'A person, a moment, something small': 'شخص، لحظة، شيء صغير',
-    'Your last 7 days': 'آخر 7 أيام', 'Nothing written yet. One line a day is enough.': 'لم تكتب شيئًا بعد. سطر واحد في اليوم يكفي.'
+    'Your last 7 days': 'آخر 7 أيام', 'Nothing written yet. One line a day is enough.': 'لم تكتب شيئًا بعد. سطر واحد في اليوم يكفي.',
+    // Food in Physical health: typing values and scanning nutrition labels
+    'Food': 'الطعام', 'Type what is on the pack, or scan its nutrition label.': 'اكتب ما على العبوة، أو امسح جدول القيم الغذائية.',
+    'Scan nutrition label': 'امسح جدول القيم الغذائية', 'From a photo': 'من صورة', '1 bag, 1 plate, 100 g': 'كيس، صحن، 100 غ',
+    'Worked out from the macros if empty': 'تُحسب من الماكروز إذا تُركت فارغة', 'Grams eaten': 'الغرامات التي أكلتها',
+    'Choose from the food list': 'اختر من قائمة الأطعمة', '+ Type it in yourself': '+ اكتبه بنفسك', 'Per 100 g': 'لكل 100 غ', 'Per serving': 'لكل حصة',
+    'Enter the calories or at least one of protein, carbs or fat.': 'أدخل السعرات أو واحدًا على الأقل من البروتين أو الكربوهيدرات أو الدهون.',
+    'Label scanning works in the phone app. Type the numbers in for now.': 'مسح الجدول يعمل في تطبيق الهاتف. اكتب الأرقام الآن.',
+    'Reading the label…': 'جارٍ قراءة الجدول…',
+    'Couldn’t find the nutrition facts. Try again closer, flat and in good light, or type the numbers in.': 'لم نجد القيم الغذائية. حاول مجددًا من مسافة أقرب وبإضاءة جيدة، أو اكتب الأرقام.',
+    'Filled in from the label. Check the numbers, then add.': 'تمت التعبئة من الجدول. راجع الأرقام ثم أضف.',
+    'Couldn’t read that photo. Try again, or type the numbers in.': 'تعذرت قراءة الصورة. حاول مجددًا، أو اكتب الأرقام.'
   };
   if (window.AR_DICT) Object.keys(AR).forEach(function (k) { if (!window.AR_DICT[k]) window.AR_DICT[k] = AR[k]; });
 })();

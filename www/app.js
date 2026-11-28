@@ -210,6 +210,7 @@
   };
   function setTab(t) {
     if (tab === 'report' && t !== 'report' && reportPushed) { reportPushed = false; ignorePop = true; history.back(); }
+    if (t === 'macros') t = 'health';     // old Macros links open Physical health
     tab = t;
     if (t === 'focus' || t === 'report') syncUsage(false);
     var btns = document.querySelectorAll('#drawer button[data-tab], #tabbar button[data-tab]');
@@ -867,7 +868,9 @@
   /* =====================================================================
      MACROS
      ===================================================================== */
-  function entryKcal(e) { return (e.p * 4 + e.c * 4 + e.f * 9) * (e.qty || 1); }
+  // Calories per serving: what the person typed (or the label said) if known, else estimated from the macros.
+  function foodKcal(f) { return f.kcal != null && f.kcal !== '' ? +f.kcal : f.p * 4 + f.c * 4 + f.f * 9; }
+  function entryKcal(e) { return foodKcal(e) * (e.qty || 1); }
   function totals(entries) {
     return entries.reduce(function (t, e) {
       var q = e.qty || 1;
@@ -914,7 +917,7 @@
 
   function openFoodSheet(viewName, food) {
     if (!sheetCtx || sheetCtx.kind !== 'food') sheetCtx = { kind: 'food', q: '', qty: 1, food: null };
-    sheetCtx.view = viewName || 'list';
+    sheetCtx.view = viewName || 'custom';
     if (food) { sheetCtx.food = food; sheetCtx.qty = 1; }
     var html;
     if (sheetCtx.view === 'pick') {
@@ -924,25 +927,36 @@
         '<div class="macro-line" id="m-pickline">' + pickLine(f, q) + '</div>' +
         '<div class="row-btns"><button class="btn" data-act="m-add-picked">Add</button><button class="btn ghost" data-act="m-back">Back</button></div>';
     } else if (sheetCtx.view === 'custom') {
-      html = '<h3>Your own food</h3><p class="muted small">Enter the values for one serving.</p>' +
-        '<label class="field"><span>Name</span><input type="text" id="fc-name" maxlength="40"></label>' +
-        '<label class="field"><span>Serving</span><input type="text" id="fc-unit" maxlength="30"></label>' +
-        '<div class="three"><label class="field"><span>Protein g</span><input type="number" id="fc-p" inputmode="decimal" step="0.1" min="0"></label>' +
-        '<label class="field"><span>Carbs g</span><input type="number" id="fc-c" inputmode="decimal" step="0.1" min="0"></label>' +
-        '<label class="field"><span>Fat g</span><input type="number" id="fc-f" inputmode="decimal" step="0.1" min="0"></label></div>' +
-        '<label class="field"><span>Servings eaten</span><input type="number" id="fc-qty" inputmode="decimal" step="0.5" min="0.5" value="1"></label>' +
+      var sc = sheetCtx.scan, v = sheetCtx.vals || {};
+      var basis = sc && sc.per100 && sc.serving ? '<div class="chips" style="margin-top:10px">' +
+        '<button type="button" class="chip' + (sheetCtx.basis === 'per100' ? ' on' : '') + '" data-act="fc-basis" data-v="per100">Per 100 g</button>' +
+        '<button type="button" class="chip' + (sheetCtx.basis === 'serving' ? ' on' : '') + '" data-act="fc-basis" data-v="serving">Per serving' + (sc.servingG ? ' (' + num1(sc.servingG) + ' g)' : '') + '</button></div>' : '';
+      var per100 = sheetCtx.basis === 'per100';
+      html = '<h3>Add food</h3><p class="muted small">Type what is on the pack, or scan its nutrition label.</p>' +
+        '<div class="row-btns">' +
+        '<label class="btn scan-btn"><input type="file" accept="image/*" capture="environment" data-scan="1" hidden>Scan nutrition label</label>' +
+        '<label class="btn ghost scan-btn"><input type="file" accept="image/*" data-scan="1" hidden>From a photo</label></div>' +
+        '<p class="muted small" id="fc-scanmsg"' + (sheetCtx.scanMsg ? '' : ' hidden') + '>' + esc(sheetCtx.scanMsg || '') + '</p>' + basis +
+        '<label class="field"><span>Name</span><input type="text" id="fc-name" maxlength="40" value="' + esc(v.name || '') + '"></label>' +
+        '<label class="field"><span>Serving</span><input type="text" id="fc-unit" maxlength="30" placeholder="1 bag, 1 plate, 100 g" value="' + esc(v.unit || '') + '"></label>' +
+        '<label class="field"><span>Calories (kcal)</span><input type="number" id="fc-kcal" inputmode="decimal" step="1" min="0" placeholder="Worked out from the macros if empty" value="' + esc(v.kcal == null ? '' : v.kcal) + '"></label>' +
+        '<div class="three"><label class="field"><span>Protein g</span><input type="number" id="fc-p" inputmode="decimal" step="0.1" min="0" value="' + esc(v.p == null ? '' : v.p) + '"></label>' +
+        '<label class="field"><span>Carbs g</span><input type="number" id="fc-c" inputmode="decimal" step="0.1" min="0" value="' + esc(v.c == null ? '' : v.c) + '"></label>' +
+        '<label class="field"><span>Fat g</span><input type="number" id="fc-f" inputmode="decimal" step="0.1" min="0" value="' + esc(v.f == null ? '' : v.f) + '"></label></div>' +
+        (per100 ? '<label class="field"><span>Grams eaten</span><input type="number" id="fc-grams" inputmode="decimal" step="1" min="1" value="' + esc(v.grams || 100) + '"></label>'
+                : '<label class="field"><span>Servings eaten</span><input type="number" id="fc-qty" inputmode="decimal" step="0.5" min="0.5" value="' + esc(v.qty || 1) + '"></label>') +
         '<label class="chk-row"><input type="checkbox" id="fc-save" checked> Save to my foods for next time</label>' +
         '<p class="err" id="fc-err" hidden></p>' +
-        '<div class="row-btns"><button class="btn" data-act="m-add-custom">Add</button><button class="btn ghost" data-act="m-back">Back</button></div>';
+        '<div class="row-btns"><button class="btn" data-act="m-add-custom">Add</button><button class="btn ghost" data-act="m-list">Choose from the food list</button></div>';
     } else {
       html = '<h3>Add food</h3><input type="text" id="fs-q" placeholder="Search foods" value="' + esc(sheetCtx.q) + '" style="margin-top:8px">' +
         '<ul class="foodlist" id="fs-results">' + foodResults() + '</ul>' +
-        '<button class="linkbtn" data-act="m-custom">+ Enter your own food</button>';
+        '<button class="linkbtn" data-act="m-custom">+ Type it in yourself</button>';
     }
     openSheet(html);
   }
   function pickLine(f, q) {
-    return '<span><b>' + Math.round((f.p * 4 + f.c * 4 + f.f * 9) * q) + '</b> kcal</span><span>P <b>' + num1(f.p * q) + '</b></span><span>C <b>' + num1(f.c * q) + '</b></span><span>F <b>' + num1(f.f * q) + '</b></span>';
+    return '<span><b>' + Math.round(foodKcal(f) * q) + '</b> kcal</span><span>P <b>' + num1(f.p * q) + '</b></span><span>C <b>' + num1(f.c * q) + '</b></span><span>F <b>' + num1(f.f * q) + '</b></span>';
   }
   function foodResults() {
     var q = (sheetCtx.q || '').toLowerCase().trim();
@@ -952,7 +966,7 @@
       var mine = f.id.indexOf('u-') === 0;
       return '<li data-act="m-pick" data-id="' + esc(f.id) + '"><span><span class="fn">' + esc(f.name) + (mine ? '<span class="tag">Mine</span>' : '') + '</span><br>' +
         '<span class="fu">' + esc(f.unit) + ' · P ' + num1(f.p) + ' · C ' + num1(f.c) + ' · F ' + num1(f.f) + '</span></span>' +
-        '<span class="fk">' + Math.round(f.p * 4 + f.c * 4 + f.f * 9) + ' kcal</span></li>';
+        '<span class="fk">' + Math.round(foodKcal(f)) + ' kcal</span></li>';
     }).join('');
   }
   function addEntry(e) {
@@ -961,15 +975,48 @@
     save(); closeSheet(); render();
     toast('Added ' + e.name);
   }
+  // What is in the manual form right now (kept when the sheet redraws, e.g. after a scan or a basis switch).
+  function readCustom() {
+    function n(id) { var el = $(id); if (!el || el.value === '') return null; var x = parseFloat(el.value); return isNaN(x) ? null : x; }
+    return { name: ($('fc-name') || {}).value || '', unit: ($('fc-unit') || {}).value || '', kcal: n('fc-kcal'), p: n('fc-p'), c: n('fc-c'), f: n('fc-f'), qty: n('fc-qty'), grams: n('fc-grams') };
+  }
   function addCustom() {
-    var name = $('fc-name').value.trim(), err = $('fc-err');
-    var p = parseFloat($('fc-p').value) || 0, c = parseFloat($('fc-c').value) || 0, f = parseFloat($('fc-f').value) || 0;
-    var qty = parseFloat($('fc-qty').value) || 1;
+    var v = readCustom(), err = $('fc-err'), name = v.name.trim();
+    var p = v.p || 0, c = v.c || 0, f = v.f || 0, kcal = v.kcal;
     if (!name) { err.textContent = 'Give the food a name.'; err.hidden = false; return; }
-    if (!(p || c || f)) { err.textContent = 'Enter at least one of protein, carbs or fat.'; err.hidden = false; return; }
-    var unit = $('fc-unit').value.trim() || '1 serving';
-    if ($('fc-save').checked) state.macros.foods.unshift({ id: 'u-' + uid(), name: name, unit: unit, p: p, c: c, f: f });
-    addEntry({ id: uid(), name: name, unit: unit, p: p, c: c, f: f, qty: qty });
+    if (!(kcal || p || c || f)) { err.textContent = 'Enter the calories or at least one of protein, carbs or fat.'; err.hidden = false; return; }
+    var per100 = sheetCtx && sheetCtx.basis === 'per100';
+    var qty = per100 ? (v.grams || 100) / 100 : (v.qty || 1);
+    var unit = per100 ? '100 g' : (v.unit.trim() || '1 serving');
+    var food = { name: name, unit: unit, p: p, c: c, f: f };
+    if (kcal != null) food.kcal = kcal;
+    if ($('fc-save').checked) state.macros.foods.unshift(Object.assign({ id: 'u-' + uid() }, food));
+    addEntry(Object.assign({ id: uid(), qty: qty }, food));
+  }
+  // Fill the form from a scanned label. basis: 'per100' or 'serving'.
+  function applyScan(basis) {
+    var sc = sheetCtx.scan, vals = Object.assign(readCustom(), {}), col = sc[basis] || sc.per100 || sc.serving;
+    sheetCtx.basis = sc[basis] ? basis : (sc.per100 ? 'per100' : 'serving');
+    ['kcal', 'p', 'c', 'f'].forEach(function (x) { vals[x] = col[x] != null ? Math.round(col[x] * 10) / 10 : null; });
+    if (sheetCtx.basis === 'per100') { vals.grams = vals.grams || sc.servingG || 100; }
+    else if (sc.servingG && !vals.unit) vals.unit = '1 serving (' + num1(sc.servingG) + ' g)';
+    sheetCtx.vals = vals;
+    openFoodSheet('custom');
+  }
+  // Reads a photo of a nutrition label on the phone (ML Kit text recognition, no internet) and fills the form.
+  function scanLabel(file) {
+    var ctx = sheetCtx, plug = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LabelScan;
+    function msg(t) { ctx.scanMsg = t; var el = $('fc-scanmsg'); if (el) { el.textContent = t; el.hidden = false; } }
+    if (!plug || !(window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) { msg('Label scanning works in the phone app. Type the numbers in for now.'); return; }
+    ctx.vals = readCustom();
+    msg('Reading the label…');
+    window.ZLLabel.shrink(file, 1600).then(function (img) { return plug.read({ image: img }); }).then(function (res) {
+      var sc = window.ZLLabel.parse(res.lines || []);
+      if (sheetCtx !== ctx) return;
+      if (!sc) { msg('Couldn’t find the nutrition facts. Try again closer, flat and in good light, or type the numbers in.'); return; }
+      ctx.scan = sc; ctx.scanMsg = 'Filled in from the label. Check the numbers, then add.';
+      applyScan(sc.per100 ? 'per100' : 'serving');
+    }).catch(function (e) { console.warn('scan', e); msg('Couldn’t read that photo. Try again, or type the numbers in.'); });
   }
   function openTargetsSheet() {
     var T = state.macros.targets || { kcal: '', p: '', c: '', f: '' };
@@ -1214,7 +1261,8 @@
 
   // Health is three separate sections: Physical (this tab, id 'health'), Mental and Spiritual.
   // Mental and Spiritual are filled by the healthMental / healthSpiritual hooks.
-  function renderHealth() { return physicalHealth(); }
+  // Food and macros sit at the top of Physical health (there is no separate Macros page any more).
+  function renderHealth() { return '<section><h2>Food</h2>' + renderMacros() + '</section>' + physicalHealth(); }
   function renderMental() { return runHooks('healthMental'); }
   function renderSpiritual() { return runHooks('healthSpiritual'); }
   function physicalHealth() {
@@ -1740,9 +1788,9 @@
     'm-prev': function () { macroDate = dateKey(addDays(fromKey(macroDate || todayKey()), -1)); render(); },
     'm-next': function () { var n = addDays(fromKey(macroDate || todayKey()), 1); if (n <= today()) { macroDate = dateKey(n); render(); } },
     'm-today': function () { macroDate = null; render(); },
-    'm-add': function () { sheetCtx = null; openFoodSheet('list'); },
+    'm-add': function () { sheetCtx = null; openFoodSheet('custom'); },
     // From the Today tab: always today's date, whatever day the Macros tab was last showing.
-    'td-add-food': function () { macroDate = null; sheetCtx = null; openFoodSheet('list'); },
+    'td-add-food': function () { macroDate = null; sheetCtx = null; openFoodSheet('custom'); },
     'td-repeat': function () { macroDate = null; ACTIONS['m-repeat'](); },
     'td-food-del': function (el) {
       var k = todayKey(), id = el.getAttribute('data-id');
@@ -1757,10 +1805,14 @@
     },
     'm-add-picked': function () {
       var f = sheetCtx.food;
-      addEntry({ id: uid(), name: f.name, unit: f.unit, p: f.p, c: f.c, f: f.f, qty: sheetCtx.qty });
+      var e = { id: uid(), name: f.name, unit: f.unit, p: f.p, c: f.c, f: f.f, qty: sheetCtx.qty };
+      if (f.kcal != null) e.kcal = f.kcal;
+      addEntry(e);
     },
     'm-custom': function () { openFoodSheet('custom'); },
     'm-back': function () { openFoodSheet('list'); },
+    'm-list': function () { sheetCtx.vals = readCustom(); openFoodSheet('list'); },
+    'fc-basis': function (el) { sheetCtx.vals = readCustom(); applyScan(el.getAttribute('data-v')); },
     'm-add-custom': addCustom,
     'm-del': function (el) {
       var k = macroDate || todayKey(), id = el.getAttribute('data-id');
@@ -1928,6 +1980,7 @@
       t.closest('.hr-row').classList.toggle('set', !!a);
       return;
     }
+    if (t.getAttribute && t.getAttribute('data-scan') && t.files && t.files[0]) { scanLabel(t.files[0]); t.value = ''; return; }
     if (t.id === 'fs-q') { sheetCtx.q = t.value; $('fs-results').innerHTML = foodResults(); return; }
     if (t.id === 'mt-p' || t.id === 'mt-c' || t.id === 'mt-f') { updateTargetSum(); return; }
     // Free-text answers: written into state on every keystroke (so a redraw never loses them),
@@ -1970,7 +2023,7 @@
     fmt12: fmt12, fmtDur: fmtDur, nowMin: nowMin, shortDate: shortDate, num1: num1, uid: uid, clone: clone, catColor: catColor, byStart: byStart,
     dayRec: dayRec, peekDay: peekDay, displayList: displayList, blocksForDate: blocksForDate, prayerBlocks: prayerBlocks, accountable: accountable,
     hasGoal: hasGoal, weightGoal: weightGoal, latestWeight: latestWeight, totals: totals, activeHabits: activeHabits, reviewOf: reviewOf, REASONS: REASONS,
-    LN: LN, enableReminders: enableReminders, ensureChannels: ensureChannels, queueReschedule: queueReschedule, reschedule: reschedule, statTile: statTile,
+    LN: LN, enableReminders: enableReminders, ensureChannels: ensureChannels, queueReschedule: queueReschedule, reschedule: reschedule, statTile: statTile, foodKcal: foodKcal,
     acc: acc, ul: ul, dayIni: dayIni, religion: religion, isMuslim: isMuslim, dashTile: dashTile, reportTimeFor: reportTimeFor, armed: armed, isTyping: isTyping, tab: function () { return tab; }, sheetOpen: function () { return sheetOpen; },
     inSetup: function () { return !!OB; }, normalize: normalize, setState: function (s) { state = s; }, applyTheme: applyTheme, openReport: openReport
   };

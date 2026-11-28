@@ -587,5 +587,21 @@ window.AR_DICT = {
   'End of the day': 'نهاية اليوم',
   'Glass blur': 'تأثير الزجاج',
   'Turn off if scrolling feels slow on your phone': 'أوقفه إذا كان التمرير بطيئًا على هاتفك',
-  '+1 L': '+1 لتر', '+0.5 L': '+0.5 لتر', '+0.25 L': '+0.25 لتر', '−1 L': '−1 لتر', '−0.5 L': '−0.5 لتر', '−0.25 L': '−0.25 لتر'
+  '+1 L': '+1 لتر', '+0.5 L': '+0.5 لتر', '+0.25 L': '+0.25 لتر', '−1 L': '−1 لتر', '−0.5 L': '−0.5 لتر', '−0.25 L': '−0.25 لتر',
+  'Microsoft account': 'حساب مايكروسوفت', 'Sign in with Microsoft': 'تسجيل الدخول عبر مايكروسوفت', 'Signing in…': 'جارٍ تسجيل الدخول…',
+  'Sign out': 'تسجيل الخروج', 'Tap again to sign out': 'اضغط مرة أخرى لتسجيل الخروج', 'Signed in': 'تم تسجيل الدخول', 'Signed out': 'تم تسجيل الخروج',
+  'Not signed in': 'غير مسجّل الدخول', 'Optional': 'اختياري', 'Manage': 'إدارة', 'Sign in': 'تسجيل الدخول',
+  'Personal account': 'حساب شخصي', 'Work or school account': 'حساب عمل أو مدرسة',
+  '. Only your name and email are kept on this phone.': '. يُحفظ اسمك وبريدك الإلكتروني فقط على هذا الهاتف.',
+  'Optional. Sign in with your Zain or personal Microsoft account. Zain Life keeps working without it.': 'اختياري. سجّل الدخول بحساب زين أو بحساب مايكروسوفت الشخصي. يبقى Zain Life يعمل بدونه.',
+  'Works in the installed app.': 'يعمل في التطبيق المثبّت.',
+  'Microsoft sign-in works in the installed app.': 'تسجيل الدخول عبر مايكروسوفت يعمل في التطبيق المثبّت.',
+  'Microsoft sign-in is not set up in this build yet.': 'تسجيل الدخول عبر مايكروسوفت غير مُعدّ في هذه النسخة بعد.',
+  'Could not open Microsoft sign-in': 'تعذّر فتح صفحة تسجيل الدخول عبر مايكروسوفت',
+  'Sign-in was cancelled.': 'تم إلغاء تسجيل الدخول.', 'Sign-in took too long. Try again.': 'استغرق تسجيل الدخول وقتًا طويلًا. حاول مرة أخرى.',
+  'Your organisation needs an admin to approve Zain Life first.': 'يجب أن يوافق مسؤول في مؤسستك على Zain Life أولًا.',
+  'The app ID in ms-config.js is not found. Check the client ID.': 'لم يُعثر على معرّف التطبيق في ms-config.js. تحقّق من معرّف العميل.',
+  'The redirect URI is not set on the app registration.': 'عنوان إعادة التوجيه غير مضاف في تسجيل التطبيق.',
+  'Microsoft sign-in failed': 'فشل تسجيل الدخول عبر مايكروسوفت', 'Microsoft sign-in failed.': 'فشل تسجيل الدخول عبر مايكروسوفت.', 'No connection to Microsoft': 'لا يوجد اتصال بمايكروسوفت',
+  'No browser on this phone': 'لا يوجد متصفح على هذا الهاتف'
 };

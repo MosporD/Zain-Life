@@ -118,7 +118,7 @@
   }
   var state = load();
   // Extension points used by life.js (workouts, Ramadan, savings, widget...).
-  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [], nowExtra: [], reportExtra: [], todayTip: [] };
+  var HOOKS = { overlay: [], today: [], health: [], reportTiles: [], reportMissed: [], notifs: [], tap: [], resume: [], saved: [], settings: [], timeline: [], todayTop: [], filter: [], dashTiles: [], dashCards: [], dashSteps: [], dayAlias: [], dashTop: [], healthActivity: [], healthBody: [], focusTop: [], quick: [], nowExtra: [], reportExtra: [], todayTip: [], profileTop: [] };
   // Health tab parts: Physical uses healthActivity/healthBody; Mental and Spiritual have their own.
   HOOKS.healthMental = []; HOOKS.healthSpiritual = [];
   function runHooks(name) { var a = [].slice.call(arguments, 1), out = ''; HOOKS[name].forEach(function (f) { try { var r = f.apply(null, a); if (typeof r === 'string') out += r; } catch (e) { console.warn(name, e); } }); return out; }

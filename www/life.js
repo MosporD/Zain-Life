@@ -116,43 +116,171 @@
     r.focusBy = r.focusBy || {};
     r.focusBy[t.title] = (r.focusBy[t.title] || 0) + mins;
     F().timer = null;
+    guardStop();
     L.save(); L.queueReschedule();
+    paintFab();
     toast((early ? 'Stopped. ' : 'Session done. ') + mins + ' focused minutes logged');
+  }
+  // One ticker for the whole app: the countdown on the card and sheet, the floating button, and the end of the session.
+  function ensureTick() {
+    if (tick || !timer()) return;
+    tick = setInterval(function () {
+      var tt = timer();
+      if (!tt) { clearInterval(tick); tick = null; paintFab(); return; }
+      var l = timerLeft(tt), els = document.querySelectorAll('.ft-left');
+      for (var i = 0; i < els.length; i++) els[i].textContent = mmss(l);
+      paintFab();
+      if (l <= 0) {
+        clearInterval(tick); tick = null; finishTimer(false);
+        if (L.sheetOpen() && document.getElementById('ft-live')) L.closeSheet();
+        rerender();
+      }
+    }, 1000);
   }
   H.todayTop.push(function () {
     var t = timer();
     if (!t) return '';
     var left = timerLeft(t);
     if (left <= 0) { setTimeout(function () { finishTimer(false); L.render(); }, 0); return ''; }
-    if (!tick) tick = setInterval(function () {
-      var el = document.getElementById('ft-left'), tt = timer();
-      if (!el || !tt) { clearInterval(tick); tick = null; return; }
-      var l = timerLeft(tt);
-      el.textContent = mmss(l);
-      if (l <= 0) { clearInterval(tick); tick = null; finishTimer(false); L.render(); }
-    }, 1000);
-    return '<div class="card ft"><span class="lbl">Focus session</span><div class="ft-row"><span class="ft-time" id="ft-left">' + mmss(left) + '</span>' +
-      '<span class="ft-t"><b>' + esc(t.title) + '</b><span class="muted small">' + t.min + ' min · phone down</span></span></div>' +
+    ensureTick();
+    return '<div class="card ft"><span class="lbl">Focus session</span><div class="ft-row"><span class="ft-time ft-left">' + mmss(left) + '</span>' +
+      '<span class="ft-t"><b class="notr">' + esc(t.title) + '</b><span class="muted small">' + t.min + ' min · ' + guardLine() + '</span></span></div>' +
       '<div class="row-btns"><button class="btn ghost" data-act="ft-stop">Stop and save</button></div></div>';
   });
   H.timeline.push(function (b, done, isCurrent) {
     if (!isCurrent || done || timer() || !(b.cat === 'growth' || b.cat === 'work' || b.cat === 'faith') || b.prayer) return '';
     return '<button class="tl-move" data-act="ft-open" data-title="' + esc(b.title) + '">Focus</button>';
   });
+
+  /* ---------------- focus guard: Do Not Disturb + screen pinning (native FocusGuard.java) ----------------
+     Do Not Disturb follows the phone's own exceptions (for example calls from starred contacts, and alarms).
+     Pinning keeps Zain Life on the screen; Android always lets the person unpin, so it is a nudge, not a lock. */
+  var guard = { dndAccess: false, dndOn: false, pinned: false };
+  function focusOpts() { var s = L.st().settings; return { dnd: s.focusDnd !== false, pin: !!s.focusPin }; }
+  function guardStatus() {
+    var n = NP();
+    if (!n) return Promise.resolve(guard);
+    return n.focusStatus().then(function (r) { if (r) guard = r; return guard; }).catch(function () { return guard; });
+  }
+  function guardStart(t) {
+    var n = NP(), o = focusOpts();
+    if (!n || (!o.dnd && !o.pin)) return;
+    // DND lifts 3 s before the end so the "Focus session done" notification is not silenced.
+    n.focusStart({ endAt: t.start + t.min * 60000 - 3000, dnd: o.dnd, pin: o.pin }).then(function (r) {
+      guard.dndOn = !!(r && r.dnd); guard.pinned = !!(r && r.pinned);
+      if (o.dnd && !guard.dndOn) toast('Notifications are not silenced. Allow Do Not Disturb access in Settings › Focus.');
+      rerender();
+    }).catch(function () {});
+  }
+  function guardStop() {
+    var n = NP();
+    guard.dndOn = false; guard.pinned = false;
+    if (n) n.focusStop().catch(function () {});
+  }
+  function guardLine() {
+    // What is actually on right now, as Android reported it.
+    if (guard.dndOn && guard.pinned) return 'notifications silenced · app pinned';
+    if (guard.dndOn) return 'notifications silenced';
+    if (guard.pinned) return 'app pinned';
+    return 'phone down';
+  }
+  function guardRows(pre) {
+    if (!NP()) return '';
+    var o = focusOpts();
+    return '<label class="setrow"><span><span class="st">Silence notifications</span><br><span class="sd">' +
+        (guard.dndAccess ? 'Do Not Disturb until the session ends' : 'Needs Do Not Disturb access, one time') + '</span></span>' +
+        '<span class="switch"><input type="checkbox" id="' + pre + '-dnd"' + (o.dnd ? ' checked' : '') + '><span></span></span></label>' +
+      '<label class="setrow"><span><span class="st">Keep me in Zain Life</span><br><span class="sd">Pins the app to the screen until the session ends</span></span>' +
+        '<span class="switch"><input type="checkbox" id="' + pre + '-pin"' + (o.pin ? ' checked' : '') + '><span></span></span></label>';
+  }
+  function askDndAccess() {
+    var n = NP();
+    if (!n) return;
+    toast('Switch Zain Life on, then come back');
+    n.focusDndSettings().catch(function () {});
+  }
+  document.addEventListener('change', function (e) {
+    var id = e.target.id;
+    if (id !== 'ft-dnd' && id !== 'fo-dnd' && id !== 'ft-pin' && id !== 'fo-pin') return;
+    var s = L.st().settings;
+    if (/-dnd$/.test(id)) { s.focusDnd = e.target.checked; if (e.target.checked && !guard.dndAccess) askDndAccess(); }
+    else s.focusPin = e.target.checked;
+    L.save();
+  });
+  A['fo-dnd-allow'] = askDndAccess;
+  H.settings.push(function (group) {
+    if (group !== 'focus') return '';
+    if (!NP()) return '<section><h2>During a focus session</h2><div class="card"><p class="muted small">Silencing notifications and pinning the app work in the installed app.</p></div></section>';
+    return '<section><h2>During a focus session</h2><div class="card">' + guardRows('fo') +
+      '<p class="muted small" style="margin-top:8px">Calls and alarms follow your phone’s own Do Not Disturb exceptions, for example starred contacts. To leave a pinned app early, hold Back and Overview, or swipe up and hold.</p>' +
+      (guard.dndAccess ? '' : '<div class="row-btns"><button class="btn ghost" data-act="fo-dnd-allow">Allow Do Not Disturb access</button></div>') + '</div></section>';
+  });
+
   function openTimerSheet(title) {
     L.openSheet('<h3>Focus session</h3><label class="field"><span>What are you working on?</span><input id="ft-title" value="' + esc(title || '') + '"></label>' +
       '<p class="flabel" style="margin-top:14px">How long?</p><div class="choice">' + [25, 45, 60, 90].map(function (m) {
         return '<button type="button" class="chip" data-act="ft-start" data-v="' + m + '">' + m + ' min</button>';
-      }).join('') + '</div><p class="muted small" style="margin-top:10px">You’ll get a notification when it ends. The minutes go into your daily report and weekly review.</p>');
+      }).join('') + '</div>' + (NP() ? '<div class="ft-guard">' + guardRows('ft') + '</div>' : '') +
+      '<p class="muted small" style="margin-top:10px">You’ll get a notification when it ends. The minutes go into your daily report and weekly review.</p>');
+  }
+  // While a session runs, the floating button opens this instead of starting a new one.
+  function openLiveSheet() {
+    var t = timer();
+    L.openSheet('<h3>Focus session</h3><div class="ft-row" id="ft-live"><span class="ft-time ft-left">' + mmss(timerLeft(t)) + '</span>' +
+      '<span class="ft-t"><b class="notr">' + esc(t.title) + '</b><span class="muted small">' + t.min + ' min · ' + guardLine() + '</span></span></div>' +
+      '<div class="row-btns"><button class="btn" data-act="close-sheet">Keep going</button><button class="btn ghost" data-act="ft-stop">Stop and save</button></div>');
   }
   A['ft-open'] = function (el) { openTimerSheet(el.getAttribute('data-title') || ''); };
+  A['ft-fab'] = function () { if (timer() && timerLeft(timer()) > 0) openLiveSheet(); else openTimerSheet(''); };
   A['ft-start'] = function (el) {
     var title = (document.getElementById('ft-title').value || '').trim() || 'Focus';
-    F().timer = { start: Date.now(), min: +el.getAttribute('data-v'), title: title, date: todayKey() };
-    L.save(); L.closeSheet(); L.setTab('today'); L.reschedule();
+    var t = F().timer = { start: Date.now(), min: +el.getAttribute('data-v'), title: title, date: todayKey() };
+    var fromDash = L.tab() === 'dashboard';
+    L.save(); L.closeSheet();
+    if (fromDash) L.render(); else L.setTab('today');
+    L.reschedule();
+    ensureTick(); paintFab();
+    guardStart(t);
     toast('Focus: ' + el.getAttribute('data-v') + ' minutes. Phone down.');
   };
-  A['ft-stop'] = function () { finishTimer(true); L.render(); };
+  A['ft-stop'] = function () { finishTimer(true); if (L.sheetOpen()) L.closeSheet(); L.render(); };
+
+  /* ---------------- floating focus button (shown on the Dashboard only, see .ffab in styles.css) ---------------- */
+  function paintFab() {
+    var b = document.getElementById('ffab');
+    if (!b) return;
+    var t = timer(), left = t ? timerLeft(t) : 0, on = !!t && left > 0;
+    var txt = on ? Math.ceil(left / 60000) + ' min' : 'Focus', lbl = b.querySelector('.ffab-t');
+    b.classList.toggle('on', on);
+    // Only touch the text when it changes, so the Arabic translation is not redone every second.
+    if (b.getAttribute('data-txt') !== txt) {
+      b.setAttribute('data-txt', txt);
+      lbl.textContent = txt;
+      b.setAttribute('aria-label', on ? 'Focus session running' : 'Start a focus session');
+    }
+  }
+  function buildFab() {
+    if (document.getElementById('ffab')) return;
+    var b = document.createElement('button');
+    b.id = 'ffab'; b.className = 'ffab'; b.setAttribute('data-act', 'ft-fab');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span class="ffab-t"></span>';
+    document.body.appendChild(b);
+    paintFab();
+  }
+  if (document.body) buildFab(); else document.addEventListener('DOMContentLoaded', buildFab);
+  // App opened or came back: refresh the guard state, end a session that ran out while away,
+  // and undo DND or pinning left over from a session that is no longer running.
+  function guardResume() {
+    guardStatus().then(function () {
+      var t = timer();
+      if (t && timerLeft(t) <= 0) { finishTimer(false); rerender(); return; }
+      if (!t && (guard.dndOn || guard.pinned)) guardStop();
+      if (t) ensureTick();
+      paintFab();
+    });
+  }
+  H.resume.push(guardResume);
+  document.addEventListener('DOMContentLoaded', guardResume);
 
   /* =====================================================================
      MOVE A MISSED TASK TO LATER TODAY

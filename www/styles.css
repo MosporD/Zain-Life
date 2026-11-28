@@ -403,6 +403,25 @@ select { width: 100%; background: var(--surface-2); border: 1px solid var(--line
 .ft-row { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
 .ft-time { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent); }
 .ft-t b { display: block; }
+/* Floating focus button (life.js buildFab): Dashboard only, above the bottom bar on the reading-end side.
+   It bobs gently with transform only and has no backdrop blur, so it stays cheap to draw while moving. */
+.ffab { position: fixed; inset-inline-end: 16px; bottom: calc(94px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); z-index: 19;
+  display: none; align-items: center; gap: 8px; height: 50px; padding: 0 18px 0 14px; border-radius: 25px; border: 1px solid rgba(255, 255, 255, .45);
+  background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, .45), rgba(255, 255, 255, 0) 46%), linear-gradient(135deg, #8a63ff, #3f6cf5);
+  color: #fff; font: inherit; font-size: .95rem; font-weight: 700; box-shadow: 0 14px 28px -10px rgba(60, 40, 200, .75);
+  animation: ffab-bob 3.2s ease-in-out infinite; will-change: transform; -webkit-tap-highlight-color: transparent; }
+.ffab svg { width: 22px; height: 22px; flex: none; }
+.ffab:active { animation: none; transform: scale(.95); }
+.ffab.on { background: linear-gradient(135deg, #1fbf8f, #2a7de1); font-variant-numeric: tabular-nums; }
+.ffab.on svg { animation: ffab-pulse 2s ease-in-out infinite; }
+@keyframes ffab-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ffab-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+body:has(#view.v-dashboard) .ffab { display: flex; }
+body.ob .ffab, body:has(#sheet-root .sheet) .ffab { display: none; }
+body.drawer-open .ffab { visibility: hidden; }
+main.v-dashboard { padding-bottom: calc(170px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))); }
+@media (prefers-reduced-motion: reduce) { .ffab, .ffab.on svg { animation: none; } }
+.ft-guard { margin-top: 14px; }
 .ram { margin-top: 14px; background: color-mix(in srgb, var(--c-faith) 14%, var(--surface)); }
 .ph-cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 8px; }
 .ph-cmp figure { margin: 0; }

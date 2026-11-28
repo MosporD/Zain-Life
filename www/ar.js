@@ -451,6 +451,8 @@ window.AR_DICT = {
   'Scrolling alerts are in the Focus tab.': 'تنبيهات التمرير موجودة في تبويب التركيز.',
   'Nothing to set here yet.': 'لا يوجد ما يُضبط هنا بعد.',
   'Focus sessions': 'جلسات التركيز', 'Session length': 'مدة الجلسة', 'Used by the Focus button on the Dashboard': 'يستخدمها زر التركيز في لوحة المعلومات',
+  'Restart': 'إعادة البدء', 'Turn off': 'إيقاف', 'Restarted:': 'أُعيد البدء:', 
+  'Restart runs the whole session again from now. Either way, the minutes you already focused are saved.': 'إعادة البدء تشغّل الجلسة كاملة من الآن. في الحالتين تُحفظ الدقائق التي ركّزت فيها.',
   'Start a focus session': 'ابدأ جلسة تركيز', 'Focus session running': 'جلسة التركيز جارية', 'Keep going': 'تابع',
   'Silence notifications': 'إسكات الإشعارات', 'Do Not Disturb until the session ends': 'عدم الإزعاج حتى تنتهي الجلسة',
   'Needs Do Not Disturb access, one time': 'يحتاج إذن عدم الإزعاج، مرة واحدة', 'Keep me in Zain Life': 'أبقني في Zain Life',

@@ -107,14 +107,19 @@
   function timer() { return F().timer || null; }
   function timerLeft(t) { return Math.max(0, t.start + t.min * 60000 - Date.now()); }
   function mmss(ms) { var s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + L.pad(s % 60); }
-  function finishTimer(early) {
-    var t = timer();
-    if (!t) return;
+  // Adds the minutes focused so far to the day's report; returns them.
+  function logMinutes(t) {
     var mins = Math.round(Math.min(t.min * 60000, Date.now() - t.start) / 60000);
     var r = L.dayRec(t.date);
     r.focus = (r.focus || 0) + mins;
     r.focusBy = r.focusBy || {};
     r.focusBy[t.title] = (r.focusBy[t.title] || 0) + mins;
+    return mins;
+  }
+  function finishTimer(early) {
+    var t = timer();
+    if (!t) return;
+    var mins = logMinutes(t);
     F().timer = null;
     guardStop();
     L.save(); L.queueReschedule();
@@ -233,8 +238,20 @@
     var t = timer();
     L.openSheet('<h3>Focus session</h3><div class="ft-row" id="ft-live"><span class="ft-time ft-left">' + mmss(timerLeft(t)) + '</span>' +
       '<span class="ft-t"><b class="notr">' + esc(t.title) + '</b><span class="muted small">' + t.min + ' min · ' + guardLine() + '</span></span></div>' +
-      '<div class="row-btns"><button class="btn" data-act="close-sheet">Keep going</button><button class="btn ghost" data-act="ft-stop">Stop and save</button></div>');
+      '<div class="row-btns"><button class="btn" data-act="ft-restart">Restart</button><button class="btn ghost" data-act="ft-stop">Turn off</button></div>' +
+      '<p class="muted small" style="margin-top:10px">Restart runs the whole session again from now. Either way, the minutes you already focused are saved.</p>');
   }
+  // Start the same session over from now, without unpinning or switching Do Not Disturb off in between.
+  A['ft-restart'] = function () {
+    var t = timer();
+    if (!t) { L.closeSheet(); return; }
+    logMinutes(t);
+    t.start = Date.now(); t.date = todayKey();
+    L.save(); L.closeSheet(); L.render(); L.reschedule();
+    ensureTick(); paintFab();
+    guardStart(t);
+    toast('Restarted: ' + t.min + ' minutes');
+  };
   A['ft-open'] = function (el) { openTimerSheet(el.getAttribute('data-title') || ''); };
   function startSession(min, title) {
     var t = F().timer = { start: Date.now(), min: min, title: title || 'Focus', date: todayKey() };
@@ -256,14 +273,14 @@
     var b = document.getElementById('ffab');
     if (!b) return;
     var t = timer(), left = t ? timerLeft(t) : 0, on = !!t && left > 0;
-    var txt = on ? Math.ceil(left / 60000) + ' min' : 'Focus', lbl = b.querySelector('.ffab-t');
+    var txt = on ? mmss(left) : 'Focus', lbl = b.querySelector('.ffab-t');
     b.classList.toggle('on', on);
-    // Only touch the text when it changes, so the Arabic translation is not redone every second.
     if (b.getAttribute('data-txt') !== txt) {
       b.setAttribute('data-txt', txt);
       lbl.textContent = txt;
-      b.setAttribute('aria-label', on ? 'Focus session running' : 'Start a focus session');
     }
+    var aria = on ? 'Focus session running' : 'Start a focus session';
+    if (b.getAttribute('data-aria') !== aria) { b.setAttribute('data-aria', aria); b.setAttribute('aria-label', aria); }
   }
   function buildFab() {
     if (document.getElementById('ffab')) return;

@@ -74,7 +74,7 @@
   var L = window.LP;
   if (!L) return;
   var esc = L.esc, A = L.ACTIONS, H = L.HOOKS, toast = L.toast;
-  var ACC_KEY = 'zainlife.msAccount', PEND_KEY = 'zainlife.msPending';
+  var ACC_KEY = 'lifeplanner.msAccount', PEND_KEY = 'lifeplanner.msPending';
   var busy = false;
 
   function cfg() { return window.ZL_MS_CONFIG || {}; }

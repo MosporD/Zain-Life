@@ -800,3 +800,19 @@ body.bars-away .fab { transform: translate3d(0, calc(100% + 60px + var(--safe-ar
 .topbar { box-shadow: var(--neu-sm); }
 body.scrolled .topbar { box-shadow: var(--neu-out); }
 #view { transform-origin: 50% 0; }
+/* ---------- wellbeing tip card (wellbeing.js) ---------- */
+.wb-tip { margin-top: 14px; display: grid; gap: 6px; border-left: 4px solid var(--wb-c, var(--accent)); }
+.wb-mind { --wb-c: var(--c-social); }
+.wb-body { --wb-c: var(--c-health); }
+.wb-tip .lbl { color: var(--wb-c); }
+.wb-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wb-x { background: none; border: 0; color: var(--muted); font-size: 1.3rem; line-height: 1; padding: 2px 6px; min-width: 32px; min-height: 32px; }
+.wb-t { font-size: 1.08rem; font-weight: 800; line-height: 1.3; }
+.wb-p { margin: 0; font-size: .92rem; line-height: 1.5; }
+.wb-did { margin: 2px 0 0; font-size: .86rem; font-weight: 700; color: var(--wb-c); }
+.wb-tip .row-btns { margin-top: 6px; }
+.v-dashboard .wb-tip { text-align: start; }
+.v-dashboard .wb-tip .row-btns { justify-content: flex-start; }
+[dir=rtl] .wb-tip { border-left: 1px solid var(--line); border-right: 4px solid var(--wb-c, var(--accent)); }
+.wb-per { border-bottom: 0; }
+.wb-chips { margin-top: 4px; }

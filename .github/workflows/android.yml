@@ -1,0 +1,42 @@
+# Builds test APKs of both apps (Zain Life and MyLifePlanner) on GitHub's servers.
+# Download them from the run's "Artifacts" box. These are debug builds signed with a key made for
+# that run, so they do not install over an APK built on the PC (uninstall that one first).
+name: Android test APKs
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm test
+      - name: Build both brands
+        run: |
+          set -e
+          mkdir -p out
+          for brand in zain personal; do
+            npx cap sync android
+            cp -r native/res/* android/app/src/main/res/
+            cp -r native/java/* android/app/src/main/java/
+            node tools/brand.js android "$brand"
+            cap="$(echo "${brand:0:1}" | tr a-z A-Z)${brand:1}"
+            (cd android && chmod +x gradlew && ./gradlew "assemble${cap}Debug" --no-daemon --stacktrace)
+            apk=$(node -p "require('./brands/$brand/brand.json').apk")
+            cp "android/app/build/outputs/apk/$brand/debug/app-$brand-debug.apk" "out/$apk"
+          done
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: out/*.apk
+          retention-days: 14

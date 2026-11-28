@@ -109,6 +109,14 @@ if ($mx -notmatch 'ViewPermissionUsageActivity') {
 if ($mx -notmatch 'READ_CALENDAR') {
   $mx = $mx -replace '</manifest>', ("    <uses-permission android:name=`"android.permission.READ_CALENDAR`" />`n" + '</manifest>')
 }
+# Focus sessions: Do Not Disturb while a session runs (the person grants "Do Not Disturb access" once)
+# and a receiver that turns it back off at the session's end time, even if the app was closed.
+if ($mx -notmatch 'ACCESS_NOTIFICATION_POLICY') {
+  $mx = $mx -replace '</manifest>', ("    <uses-permission android:name=`"android.permission.ACCESS_NOTIFICATION_POLICY`" />`n" + '</manifest>')
+}
+if ($mx -notmatch 'FocusGuard') {
+  $mx = $mx -replace '</application>', ("        <receiver android:name=`".FocusGuard`" android:exported=`"false`" />`n" + '    </application>')
+}
 # Home-screen widget.
 if ($mx -notmatch 'PlannerWidget') {
   $w = "        <receiver android:name=`".PlannerWidget`" android:exported=`"false`" android:label=`"Zain Life`">`n" +

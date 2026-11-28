@@ -52,6 +52,7 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/planner_widget_info" />
         </receiver>
         <service android:name=".ChallengeService" android:exported="false" android:foregroundServiceType="location" />
+        <receiver android:name=".FocusGuard" android:exported="false" />
     </application>
 
     <!-- Permissions -->
@@ -71,4 +72,5 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 </manifest>

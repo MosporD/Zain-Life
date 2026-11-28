@@ -1,6 +1,6 @@
 /* Today tab: Now (with a mood check for whatever you are in), Today's plan as fading cards,
    Nutrition (food and water, added right here) and the end of the day. Also keeps the mood log:
-   one mood per part of the plan, shown in the daily report and as a list in the Health tab. */
+   one mood per part of the plan, shown in the daily report and as a list in Health → Mental. */
 (function () {
   'use strict';
   var L = window.LP;
@@ -166,8 +166,8 @@
     r.habits[k] = !r.habits[k];
     L.save(); L.render();
   };
-  // Health tab: the last 7 days as a list, each with the average and a dot per part of the plan.
-  H.healthActivity.push(function () {
+  // Health → Mental: the last 7 days as a list, each with the average and a dot per part of the plan.
+  H.healthMental.push(function () {
     var t = L.today(), days = [], any = false;
     for (var i = 0; i < 7; i++) {
       var k = L.dateKey(L.addDays(t, -i)), rows = dayMoods(k);

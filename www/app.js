@@ -208,12 +208,14 @@
   };
   function setTab(t) {
     if (tab === 'report' && t !== 'report' && reportPushed) { reportPushed = false; ignorePop = true; history.back(); }
+    var from = tab;
     tab = t;
     if (t === 'focus' || t === 'report') syncUsage(false);
     var btns = document.querySelectorAll('#drawer button[data-tab], #tabbar button[data-tab]');
     for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-tab') === t);
     render();
     window.scrollTo(0, 0);
+    if (window.ZMotion) ZMotion.page(from, t);   // slide/fade the new page in, bring the bars back (motion.js)
   }
   function render() {
     if (OB) { renderOb(); return; }

@@ -4,12 +4,14 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -23,7 +25,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 
-/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect, calendar, step challenge). */
+/** JavaScript bridge: window.Capacitor.Plugins.LifeNative (backup files, widget, Health Connect, calendar, step challenge, focus guard). */
 @CapacitorPlugin(
     name = "LifeNative",
     permissions = {
@@ -215,4 +217,54 @@ public class LifeNativePlugin extends Plugin {
     /** Called when the app opens: restarts the check after a phone restart or if Android stopped it. */
     @PluginMethod
     public void challengeEnsure(PluginCall call) { challengeSync(); call.resolve(challengeState()); }
+
+    /* ---------------- focus session guard (FocusGuard.java) ---------------- */
+
+    /** {dndAccess, dndOn, pinned}: whether DND access is granted, DND is on because of us, the screen is pinned. */
+    @PluginMethod
+    public void focusStatus(PluginCall call) {
+        FocusGuard.stopIfExpired(getContext());
+        JSObject r = new JSObject();
+        r.put("dndAccess", FocusGuard.dndAccess(getContext()));
+        r.put("dndOn", FocusGuard.dndOurs(getContext()));
+        r.put("pinned", FocusGuard.pinned(getActivity()));
+        call.resolve(r);
+    }
+
+    /** Opens Android's "Do Not Disturb access" list, where the person switches Zain Life on (once). */
+    @PluginMethod
+    public void focusDndSettings(PluginCall call) {
+        try {
+            getContext().startActivity(new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Exception e) {
+            getContext().startActivity(new Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        }
+        call.resolve();
+    }
+
+    /** {endAt (ms), dnd, pin}: silences notifications until endAt and/or pins the app to the screen. */
+    @PluginMethod
+    public void focusStart(PluginCall call) {
+        long endAt = call.getLong("endAt", 0L);
+        boolean dnd = Boolean.TRUE.equals(call.getBoolean("dnd", false));
+        boolean pin = Boolean.TRUE.equals(call.getBoolean("pin", false));
+        JSObject r = new JSObject();
+        r.put("dnd", dnd && endAt > System.currentTimeMillis() && FocusGuard.startDnd(getContext(), endAt));
+        if (pin && getActivity() != null) {
+            getActivity().runOnUiThread(() -> { FocusGuard.pin(getActivity()); r.put("pinned", FocusGuard.pinned(getActivity())); call.resolve(r); });
+            return;
+        }
+        call.resolve(r);
+    }
+
+    /** Ends the guard: DND back to how it was, screen unpinned. Safe to call when nothing is on. */
+    @PluginMethod
+    public void focusStop(PluginCall call) {
+        FocusGuard.stopDnd(getContext());
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> { FocusGuard.unpin(getActivity()); call.resolve(); });
+            return;
+        }
+        call.resolve();
+    }
 }

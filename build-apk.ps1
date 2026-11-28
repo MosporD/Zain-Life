@@ -118,6 +118,14 @@ if ($mx -notmatch 'ViewPermissionUsageActivity') {
 if ($mx -notmatch 'READ_CALENDAR') {
   $mx = $mx -replace '</manifest>', ("    <uses-permission android:name=`"android.permission.READ_CALENDAR`" />`n" + '</manifest>')
 }
+# Focus sessions: Do Not Disturb while a session runs (the person grants "Do Not Disturb access" once)
+# and a receiver that turns it back off at the session's end time, even if the app was closed.
+if ($mx -notmatch 'ACCESS_NOTIFICATION_POLICY') {
+  $mx = $mx -replace '</manifest>', ("    <uses-permission android:name=`"android.permission.ACCESS_NOTIFICATION_POLICY`" />`n" + '</manifest>')
+}
+if ($mx -notmatch 'FocusGuard') {
+  $mx = $mx -replace '</application>', ("        <receiver android:name=`".FocusGuard`" android:exported=`"false`" />`n" + '    </application>')
+}
 # Home-screen widget.
 if ($mx -notmatch 'PlannerWidget') {
   $w = "        <receiver android:name=`".PlannerWidget`" android:exported=`"false`" android:label=`"@string/app_name`">`n" +
@@ -144,6 +152,16 @@ if ($mx -notmatch 'ACTIVITY_RECOGNITION') {
 if ($mx -notmatch 'ChallengeService') {
   $svc = "        <service android:name=`".ChallengeService`" android:exported=`"false`" android:foregroundServiceType=`"location`" />`n"
   $mx = $mx -replace '</application>', ($svc + '    </application>')
+}
+# Microsoft sign-in: the browser returns to the app through com.zainlife.app://auth.
+if ($mx -notmatch 'com\.zainlife\.app" android:host="auth"') {
+  $ms = "            <intent-filter>`n" +
+        "                <action android:name=`"android.intent.action.VIEW`" />`n" +
+        "                <category android:name=`"android.intent.category.DEFAULT`" />`n" +
+        "                <category android:name=`"android.intent.category.BROWSABLE`" />`n" +
+        "                <data android:scheme=`"com.zainlife.app`" android:host=`"auth`" />`n" +
+        "            </intent-filter>`n"
+  $mx = ([regex]'(<category android:name="android.intent.category.LAUNCHER" />\s*</intent-filter>\s*)').Replace($mx, ('$1' + $ms), 1)
 }
 # App name shown under the icon and on the widget comes from the brand (android\app\src\<brand>\res).
 $mx = $mx -replace 'android:label="(Life Planner|Zainers Health|Zain Life)"', 'android:label="@string/app_name"'

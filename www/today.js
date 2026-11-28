@@ -1,6 +1,6 @@
 /* Today tab: Now (with a mood check for whatever you are in), Today's plan as fading cards,
    Nutrition (food and water, added right here) and the end of the day. Also keeps the mood log:
-   one mood per part of the plan, shown in the daily report and as a list in the Health tab. */
+   one mood per part of the plan, shown in the daily report and as a list in the Mental health tab. */
 (function () {
   'use strict';
   var L = window.LP;
@@ -92,7 +92,7 @@
         '<div class="mbars">' + bar('Protein', tot.p, T.p, 'var(--accent)') + bar('Carbs', tot.c, T.c, 'var(--c-growth)') + bar('Fat', tot.f, T.f, 'var(--c-family)') + '</div>'
       : '<div class="kcal"><span class="big">' + kc.toLocaleString() + '</span><span class="of">kcal eaten today</span></div>';
     var list = food.length ? '<ul class="loglist">' + food.map(function (e) {
-      var q = e.qty || 1, kcal = Math.round((e.p * 4 + e.c * 4 + e.f * 9) * q);
+      var q = e.qty || 1, kcal = Math.round(L.foodKcal(e) * q);
       return '<li><span class="ln"><b>' + esc(e.name) + (q !== 1 ? ' × ' + L.num1(q) : '') + '</b><span>' + esc(e.unit || '') + '</span></span>' +
         '<span class="lk">' + kcal + '</span><button class="x" data-act="td-food-del" data-id="' + esc(e.id) + '" aria-label="Remove ' + esc(e.name) + '">×</button></li>';
     }).join('') + '</ul>' : '<p class="muted small" style="margin-top:10px">Nothing eaten yet today.</p>';
@@ -166,8 +166,8 @@
     r.habits[k] = !r.habits[k];
     L.save(); L.render();
   };
-  // Health tab: the last 7 days as a list, each with the average and a dot per part of the plan.
-  H.healthActivity.push(function () {
+  // the Mental health tab: the last 7 days as a list, each with the average and a dot per part of the plan.
+  H.healthMental.push(function () {
     var t = L.today(), days = [], any = false;
     for (var i = 0; i < 7; i++) {
       var k = L.dateKey(L.addDays(t, -i)), rows = dayMoods(k);

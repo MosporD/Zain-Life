@@ -834,3 +834,4 @@ body.scrolled .topbar { box-shadow: var(--neu-out); }
 [dir=rtl] .wb-tip { border-left: 1px solid var(--line); border-right: 4px solid var(--wb-c, var(--accent)); }
 .wb-per { border-bottom: 0; }
 .wb-chips { margin-top: 4px; }
+.grat-list li { flex-direction: column; align-items: flex-start; gap: 2px; }

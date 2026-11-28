@@ -968,8 +968,10 @@
     return sec('Weekly review', weeklyReview() +
         '<div class="card" style="margin-top:12px"><label class="setrow"><span><span class="st">Remind me on Friday evening</span><br><span class="sd">A notification at 8 pm to look back at the week</span></span>' +
         '<span class="switch"><input type="checkbox" id="weekly-on"' + (F().weekly ? ' checked' : '') + '><span></span></span></label></div>') +
-      (L.isMuslim() ? faithSection() + sec('Ramadan', ramadanCard()) : '') + holidaysSection() + peopleSection();
+      holidaysSection() + peopleSection();
   }
+  // Faith and Ramadan live in the Spiritual health tab.
+  H.healthSpiritual.push(function () { return L.isMuslim() ? faithSection() + sec('Ramadan', ramadanCard()) : ''; });
   L.TABS.life = ['Life', renderLife];
   L.lifeData = F;                   // shared with money.js
   L.savingsSection = savingsSection;
@@ -1037,7 +1039,7 @@
   });
   H.tap.push(function (x) {
     if (x.type === 'week') { weekOff = 0; L.setTab('life'); return true; }
-    if (x.type === 'athkar') { L.setTab('life'); return true; }
+    if (x.type === 'athkar') { L.setTab('spiritual'); return true; }
     if (x.type === 'focus') { L.setTab('focus'); return true; }
     if (x.type === 'ramadan' || x.type === 'focus') { L.setTab('today'); return true; }
     return false;
